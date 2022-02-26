@@ -17,7 +17,7 @@ install_grub_theme() {
         echo "No grub theme selected. Skipping..."
     else
         echo -e "Installing $GRUBTHEME Grub theme..."
-        git clone https://github.com/ChrisTitusTech/Top-5-Bootloader-Themes tmp
+        git clone https://github.com/ChrisTitusTech/Top-5-Bootloader-Themes "$HOME"/tmp
         echo -e "Creating the theme directory..."
         mkdir -p "$THEMEDIR"/"$GRUBTHEME"
         echo -e "Copying the theme..."

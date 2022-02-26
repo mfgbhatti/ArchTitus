@@ -5,6 +5,7 @@
 
 pacman -Sy --noconfirm
 pacman -S --noconfirm --needed terminus-font
+fc-cache -fv
 setfont ter-v22b
 clear
 # Find the name of the folder the scripts are in
@@ -12,7 +13,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
 CONFIG_FILE="$SCRIPT_DIR"/setup.conf
 
-LOG="${SCRIPT_DIR}/main.log"
+LOG="$SCRIPT_DIR"/main.log
 [[ -f "$LOG" ]] && rm -f "$LOG"
 
 logo() {
@@ -30,7 +31,7 @@ logo() {
 
 copy_logs() {
     echo "Copying logs $MOUNTPOINT/var/log/"
-    cp "$LOG" "$MOUNTPOINT"/var/log/archtitus.log
+    cp -v "$LOG" "$MOUNTPOINT"/var/log/archtitus.log
 }
 
 do_reboot() {
@@ -79,10 +80,10 @@ sequence() {
         echo "ERROR! Missing file: setup.conf"
         exit 1
     fi
-    bash 0-preinstall.sh
-    arch-chroot /mnt /root/ArchTitus/1-setup.sh
-    arch-chroot /mnt /usr/bin/runuser -u "$USERNAME" -- /home/"$USERNAME"/ArchTitus/2-user.sh
-    arch-chroot /mnt /root/ArchTitus/3-post-setup.sh
+    bash "$SCRIPT_DIR"/scripts/0-preinstall.sh
+    arch-chroot "$MOUNTPOINT" /root/ArchTitus/scripts/1-setup.sh
+    arch-chroot "$MOUNTPOINT" /usr/bin/runuser -u "$USERNAME" -- /home/"$USERNAME"/ArchTitus/scripts/2-user.sh
+    arch-chroot "$MOUNTPOINT" /root/ArchTitus/scripts/scripts/3-post-setup.sh
     logo
     echo -ne "
 ------------------------------------------------------------------------
