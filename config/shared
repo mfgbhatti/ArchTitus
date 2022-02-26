@@ -1,0 +1,169 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC1090,SC2034
+
+center() {
+  termwidth="$(tput cols)"
+  padding="$(printf '%0.1s' \ {1..500})"
+  printf '%*.*s %s %*.*s\n' 0 "$(((termwidth-2-${#1})/2))" "$padding" "$1" 0 "$(((termwidth-1-${#1})/2))" "$padding"
+}
+
+title() {
+    center ["$1"]
+}
+
+logo() {
+    center "         .8.            d888888o.           .8.           8 8888"
+    center "        .888.         .'8888:' '88.        .888.          8 8888"
+    center "       :88888.        8.'8888.   Y8       :88888.         8 8888"
+    center "      . '88888.       '8.'8888.          . '88888.        8 8888"
+    center "     .8. '88888.       '8.'8888.        .8. '88888.       8 8888"
+    center "    .8'8. '88888.       '8.'8888.      .8'8. '88888.      8 8888"
+    center "   .8' '8. '88888.       '8.'8888.    .8' '8. '88888.     8 8888"
+    center "  .8'   '8. '88888.  8b   '8.'8888.  .8'   '8. '88888.    8 8888"
+    center " .888888888. '88888. '8b.  ;8.'8888 .888888888. '88888.   8 8888"
+    center ".8'       '8. '88888. 'Y8888P ,88P'.8'       '8. '88888.  8 8888"
+    echo ""   
+    center "                Archlinux System Automated Installer            "
+}
+
+source_file() {
+    if [[ -f "$1" ]]; then
+        source "$1"
+    else
+        echo "ERROR! Missing file: $1"
+        exit 0
+    fi
+}
+
+PROMPT="Please enter your option: "
+
+set_option() {
+    if grep -Eq "^${1}.*" "$CONFIG_FILE"; then
+        sed -i -e "/^${1}.*/d" "$CONFIG_FILE"
+    fi
+    echo "${1}=${2}" >>"$CONFIG_FILE"
+}
+
+install_pkg () {
+    pacman -S --noconfirm --needed "$@"
+}
+
+something_failed() {
+    echo -ne "ERROR! Something is not right. Exiting.\n"
+    exit 0
+}
+
+invalid_option() {
+    echo -ne "ERROR! Your selected option is invalid, retry \n"
+}
+
+root_check() {
+    if [[ "$(id -u)" != "0" ]]; then
+        echo -ne "ERROR! This script must be run under the 'root' user!\n"
+        exit 0
+    fi
+}
+
+docker_check() {
+    if awk -F/ '$2 == "docker"' /proc/self/cgroup | read -r; then
+        echo -ne "ERROR! Docker container not supported (at the moment)\n"
+        exit 0
+    elif [[ -f /.dockerenv ]]; then
+        echo -ne "ERROR! Docker container not supported (at the moment)\n"
+        exit 0
+    fi
+}
+
+arch_check() {
+    if [[ ! -e /etc/arch-release ]]; then
+        echo -ne "ERROR! This script must be run in Arch Linux!\n"
+        exit 0
+    fi
+}
+
+pacman_check() {
+    if [[ -f /var/lib/pacman/db.lck ]]; then
+        echo "ERROR! Pacman is blocked."
+        echo -ne "If not running remove /var/lib/pacman/db.lck.\n"
+        exit 0
+    fi
+}
+
+connection_test() {
+    ping -q -w 1 -c 1 "$(ip r | grep default | awk 'NR==1 {print $3}')" &>/dev/null && return 1 || return 0
+}
+
+elements_present() {
+    for e in "${@:2}"; do [[ "$e" == "$1" ]] && break; done
+}
+
+write_to_config() {
+    set_option "ROOT" "ROOT"
+    set_option "BOOT" "EFIBOOT"
+    set_option "MOUNTPOINT" "/mnt"
+}
+
+set_ntp() {
+    timedatectl set-ntp true
+}
+
+background_checks(){
+    root_check
+    docker_check
+    arch_check
+    pacman_check
+    if connection_test; then
+        echo -ne "ERROR! There seems to be no internet connection.\n"
+        exit 0
+    fi
+    set_ntp
+}
+
+copy_logs() {
+    echo "Copying logs"
+    cp -v "$LOG" "$MOUNTPOINT"/var/log/asai.log
+}
+
+do_reboot() {
+    echo "unmounting $MOUNTPOINT"
+    if [[ "$LVM" -eq "1" || "$LUKS" -eq "1" ]]; then
+        i=0
+        while [[ "$i" -le "${#LVM_NAMES[@]}" ]]; do
+            umount -l /dev/"$LVM_VG"/"${LVM_NAMES[$i]}"
+        done
+    fi
+    umount -R "$MOUNTPOINT"/boot
+    umount -R "$MOUNTPOINT"
+    echo "Rebooting..."
+    reboot
+}
+
+end() {
+    REBOOT="true"
+    copy_logs
+    for ((i = 15; i >= 1; i--)); do
+        read -r -s -n 1 -t 1 -p "ASAI is rebooting in $i seconds... Press Esc key to abort or press R key to reboot now."$'\n' KEY
+        CODE="$?"
+        if [ "$CODE" != "0" ]; then
+            continue
+        fi
+        if [[ "$KEY" == $'\e' ]]; then
+            REBOOT="false"
+            break
+        elif [[ "$KEY" == "r" || "$KEY" == "R" ]]; then
+            REBOOT="true"
+            break
+        fi
+    done
+    if [[ "$REBOOT" == "true" ]]; then
+        do_reboot
+    else
+        echo "Reboot is aborted "
+    fi
+}
+
+pacman -Sy --noconfirm
+install_pkg terminus-font
+
+fc-cache -fv >/dev/null 2>&1
+setfont ter-v22b
