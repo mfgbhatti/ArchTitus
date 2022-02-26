@@ -6,6 +6,8 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
 CONFIG_FILE="$SCRIPT_DIR"/config/setup.conf
 FUNC_FILE="$SCRIPT_DIR"/config/shared
+LOG="$SCRIPT_DIR"/main.log
+[[ -f "$LOG" ]] && rm -f "$LOG"
 
 source_file() {
     if [[ -f "$1" ]]; then
@@ -16,26 +18,22 @@ source_file() {
     fi
 }
 
-
-LOG="$SCRIPT_DIR"/main.log
-[[ -f "$LOG" ]] && rm -f "$LOG"
-
 sequence() {
-    echo -ne "Starting asai...\n"
+    echo -ne "Starting ASAI...\n"
     source_file "$CONFIG_FILE"
     . "$SCRIPT_DIR"/scripts/0-preinstall
     arch-chroot "$MOUNTPOINT" /root/asai/scripts/1-setup
     arch-chroot "$MOUNTPOINT" /usr/bin/runuser -u "$USERNAME" -- /home/"$USERNAME"/asai/scripts/2-user
-    arch-chroot "$MOUNTPOINT" /root/asai/scripts/3-post-setup
+    arch-chroot "$MOUNTPOINT" /root/asai/scripts/3-postinstall
     logo
-    title Done - Please Eject Install Media and Reboot
+    title "Done - Please Eject Install Media and Reboot"
 
 }
 
-
 source_file "$FUNC_FILE"
-background_checks
+clear
 logo
+background_checks
 title "Scripts are in directory named asai"
 . "$SCRIPT_DIR"/scripts/startup
 sequence |& tee "$LOG"

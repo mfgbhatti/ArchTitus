@@ -61,7 +61,7 @@ refresh_pacman
 
 echo "Installing $DESKTOP"
 case "$DESKTOP" in
-"default")
+"kde")
     while IFS= read -r LINE; do
         echo "INSTALLING: $LINE"
         install_pkg "$LINE"

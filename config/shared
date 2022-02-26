@@ -2,9 +2,9 @@
 # shellcheck disable=SC1090,SC2034
 
 center() {
-  termwidth="$(tput cols)"
+  width="$(tput cols)"
   padding="$(printf '%0.1s' \ {1..500})"
-  printf '%*.*s %s %*.*s\n' 0 "$(((termwidth-2-${#1})/2))" "$padding" "$1" 0 "$(((termwidth-1-${#1})/2))" "$padding"
+  printf '%*.*s %s %*.*s\n' 0 "$(((width-2-${#1})/2))" "$padding" "$1" 0 "$(((width-1-${#1})/2))" "$padding"
 }
 
 title() {
@@ -25,6 +25,7 @@ logo() {
     center ".8'       '8. '88888. 'Y8888P ,88P'.8'       '8. '88888.  8 8888"
     echo ""   
     center "                Archlinux System Automated Installer            "
+    echo "" 
 }
 
 source_file() {
@@ -46,7 +47,7 @@ set_option() {
 }
 
 install_pkg () {
-    pacman -S --noconfirm --needed "$@"
+    pacman -S --noconfirm --needed "$@" >/dev/null 2>&1
 }
 
 something_failed() {
@@ -168,3 +169,5 @@ install_pkg terminus-font
 
 fc-cache -fv >/dev/null 2>&1
 setfont ter-v22b
+
+_TIMEZONE="$(curl --fail https://ipapi.co/timezone)"
