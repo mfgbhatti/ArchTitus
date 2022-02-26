@@ -5,7 +5,7 @@
 
 pacman -Sy --noconfirm
 pacman -S --noconfirm --needed terminus-font
-fc-cache -fv
+fc-cache -fv >/dev/null 2>&1
 setfont ter-v22b
 clear
 # Find the name of the folder the scripts are in
@@ -36,7 +36,7 @@ logo() {
 }
 
 copy_logs() {
-    echo "Copying logs $MOUNTPOINT/var/log/"
+    echo "Copying logs"
     cp -v "$LOG" "$MOUNTPOINT"/var/log/asai.log
 }
 
@@ -84,20 +84,20 @@ sequence() {
         source "$CONFIG_FILE"
     else
         echo "ERROR! Missing file: setup.conf"
-        exit 1
+        exit 0
     fi
-    bash "$SCRIPT_DIR"/scripts/0-preinstall
+    . "$SCRIPT_DIR"/scripts/0-preinstall
     arch-chroot "$MOUNTPOINT" /root/asai/scripts/1-setup
     arch-chroot "$MOUNTPOINT" /usr/bin/runuser -u "$USERNAME" -- /home/"$USERNAME"/asai/scripts/2-user
     arch-chroot "$MOUNTPOINT" /root/asai/scripts/scripts/3-post-setup
     logo
     echo -ne "
-            Done - Please Eject Install Media and Reboot"
+            Done - Please Eject Install Media and Reboot\n\n"
 
 }
 logo
 echo -ne "
-            Scripts are in directory named asai"
-bash startup.sh
+            Scripts are in directory named asai\n\n"
+. "$SCRIPT_DIR"/scripts/startup
 sequence |& tee "$LOG"
 end

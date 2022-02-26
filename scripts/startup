@@ -20,7 +20,7 @@ set_option() {
 
 check_root() {
     if [[ "$(id -u)" != "0" ]]; then
-        echo -ne "ERROR! This script must be running under the 'root' user!\n"
+        echo -ne "ERROR! This script must be run under the 'root' user!\n"
         exit 0
     fi
 }
