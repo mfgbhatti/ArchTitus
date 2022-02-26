@@ -402,7 +402,7 @@ ssd_drive() {
 
 disk_selection() {
     title "Disk Selection"
-    DISKLIST="$(lsblk -n --output TYPE,KNAME,SIZE | awk '$1=="disk"{print "/dev/"$2" - "$3}')" # show disks with /dev/ prefix and size
+    DISKLIST=($(lsblk -n --output TYPE,KNAME,SIZE | awk '$1=="disk"{print "/dev/"$2" - "$3}')) # show disks with /dev/ prefix and size
     PS3="$PROMPT"
     select _DISK in "${DISKLIST[@]}"; do
         if elements_present "$_DISK" "${DISKLIST[@]}"; then
