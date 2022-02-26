@@ -27,12 +27,8 @@ Download ArchISO from <https://archlinux.org/download/> and put on a USB drive w
 You can download latest release 
 
 ```
-curl -s https://api.github.com/repos/mfgbhatti/asai/releases/latest | grep "tarball_url" | awk '{print $2}' | tr -d \", | xargs wget -O - | tar -xvz --transform 's/[a-z0-9-]*/asai/1'
-```
-now do
-```
-cd asai
-./asai
+curl -LO https://raw.githubusercontent.com/mfgbhatti/asai/main/download
+bash download
 ```
 ## Features
 ASAI offer in addition to the following:
