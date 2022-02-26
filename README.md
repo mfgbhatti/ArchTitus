@@ -24,11 +24,12 @@
 Download ArchISO from <https://archlinux.org/download/> and put on a USB drive with [Etcher](https://www.balena.io/etcher/), [Ventoy](https://www.ventoy.net/en/index.html), or [Rufus](https://rufus.ie/en/)
 
 ## Download ASAI
-You can download latest release 
+You can clone ASAI
 
 ```
-curl -LO https://raw.githubusercontent.com/mfgbhatti/asai/main/download
-bash download
+git clone https://github.com/mfgbhatti/asai
+cd asai
+./asai
 ```
 ## Features
 ASAI offer in addition to the following:
