@@ -30,7 +30,7 @@ logo() {
  .888888888. '88888. '8b.  ;8.'8888 .888888888. '88888.   8 8888
 .8'       '8. '88888. 'Y8888P ,88P'.8'       '8. '88888.  8 8888
 -----------------------------------------------------------------
-                Arch System Automated Installer
+                Archlinux System Automated Installer
 -----------------------------------------------------------------
 "
 }
@@ -58,7 +58,7 @@ end() {
     REBOOT="true"
     copy_logs
     for ((i = 15; i >= 1; i--)); do
-        read -r -s -n 1 -t 1 -p "Rebooting in $i seconds... Press Esc key to abort or press R key to reboot now."$'\n' KEY
+        read -r -s -n 1 -t 1 -p "ASAI is rebooting in $i seconds... Press Esc key to abort or press R key to reboot now."$'\n' KEY
         CODE="$?"
         if [ "$CODE" != "0" ]; then
             continue

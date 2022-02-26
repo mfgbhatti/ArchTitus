@@ -9,6 +9,7 @@
   <img src="https://img.shields.io/github/stars/mfgbhatti/asai?style=for-the-badge">
   <img src="https://img.shields.io/github/forks/mfgbhatti/asai?color=teal&style=for-the-badge">
 </p>
+
 ---
 
 ## Note
@@ -33,7 +34,7 @@ now do
 cd asai
 ./asai
 ```
-
+## Features
 ASAI offer in addition to the following:
 
 ### Background functions
