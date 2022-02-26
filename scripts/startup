@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
-
 # shellcheck disable=SC2207,SC2120
 
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+# SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
 # Set up a config file
 CONFIG_FILE="$SCRIPT_DIR"/config/setup.conf
@@ -29,7 +28,7 @@ efi_check() {
         set_option "UEFI" 0
     fi
 }
-
+Arch
 set_btrfs() {
     echo "Please enter your btrfs subvolumes separated by space"
     echo "usualy they start with @."
@@ -263,7 +262,7 @@ ssd_drive() {
 
 disk_selection() {
     title "Disk Selection"
-    DISKLIST=($(lsblk -n --output TYPE,KNAME,SIZE | awk '$1=="disk"{print "/dev/"$2" - "$3}')) # show disks with /dev/ prefix and size
+    DISKLIST=("$(lsblk -n --output TYPE,KNAME,SIZE | awk '$1=="disk"{print "/dev/"$2" - "$3}')") # show disks with /dev/ prefix and size
     PS3="$PROMPT"
     select _DISK in "${DISKLIST[@]}"; do
         if elements_present "$_DISK" "${DISKLIST[@]}"; then
@@ -311,11 +310,14 @@ user_info() {
 
 set_locale() {
     title "Setup Locale"
-    LOCALES=($(grep UTF-8 /etc/locale.gen | sed 's/\..*$//' | sed '/@/d' | awk '{print $1}' | uniq | sed 's/#//g'))
+    # LOCALES=($(grep UTF-8 /etc/locale.gen | sed 's/\..*$//' | sed '/@/d' | awk '{print $1}' | uniq | sed 's/#//g'))
+    LOCALES=($(grep UTF-8 /etc/locale.gen | sed 's/\_.*$//' | sed 's/#//' | uniq))
+    grep UTF-8 /etc/locale.gen | sed 's/\_.*$//' | sed 's/#//' | uniq
     PS3="$PROMPT"
     select LOCALE in "${LOCALES[@]}"; do
         if elements_present "$LOCALE" "${LOCALES[@]}"; then
-            set_option "LOCALE" "\"${LOCALE}.UTF-8 UTF-8\""
+            # set_option "LOCALE" "\"${LOCALE}.UTF-8 UTF-8\""
+            set_option "LOCALE" "$LOCALE"
             break
         else
             invalid_option

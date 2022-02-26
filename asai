@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
-
-# shellcheck disable=SC1091
-# shellcheck source=./setup.conf
+# shellcheck disable=SC1091,SC1090
 
 # Find the name of the folder the scripts are in
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
@@ -28,7 +26,7 @@ sequence() {
     . "$SCRIPT_DIR"/scripts/0-preinstall
     arch-chroot "$MOUNTPOINT" /root/asai/scripts/1-setup
     arch-chroot "$MOUNTPOINT" /usr/bin/runuser -u "$USERNAME" -- /home/"$USERNAME"/asai/scripts/2-user
-    arch-chroot "$MOUNTPOINT" /root/asai/scripts/scripts/3-post-setup
+    arch-chroot "$MOUNTPOINT" /root/asai/scripts/3-post-setup
     logo
     title Done - Please Eject Install Media and Reboot
 
@@ -38,7 +36,7 @@ sequence() {
 source_file "$FUNC_FILE"
 background_checks
 logo
-title Scripts are in directory named asai
+title "Scripts are in directory named asai"
 . "$SCRIPT_DIR"/scripts/startup
 sequence |& tee "$LOG"
 end
