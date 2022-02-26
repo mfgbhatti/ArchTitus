@@ -86,10 +86,10 @@ sequence() {
         echo "ERROR! Missing file: setup.conf"
         exit 1
     fi
-    bash "$SCRIPT_DIR"/scripts/0-preinstall.sh
-    arch-chroot "$MOUNTPOINT" /root/asai/scripts/1-setup.sh
-    arch-chroot "$MOUNTPOINT" /usr/bin/runuser -u "$USERNAME" -- /home/"$USERNAME"/asai/scripts/2-user.sh
-    arch-chroot "$MOUNTPOINT" /root/asai/scripts/scripts/3-post-setup.sh
+    bash "$SCRIPT_DIR"/scripts/0-preinstall
+    arch-chroot "$MOUNTPOINT" /root/asai/scripts/1-setup
+    arch-chroot "$MOUNTPOINT" /usr/bin/runuser -u "$USERNAME" -- /home/"$USERNAME"/asai/scripts/2-user
+    arch-chroot "$MOUNTPOINT" /root/asai/scripts/scripts/3-post-setup
     logo
     echo -ne "
             Done - Please Eject Install Media and Reboot"

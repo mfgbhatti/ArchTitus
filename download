@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-curl -s https://api.github.com/repos/mfgbhatti/asai/releases/latest | grep "tarball_url" | awk '{print $2}' | tr -d \", | xargs wget -O - | tar -xvz --transform 's/[a-z0-9-]*/asai/1'
-cd asai || exit 0
-./asai
