@@ -310,21 +310,39 @@ user_info() {
 
 set_locale() {
     title "Setup Locale"
-    # LOCALES=($(grep UTF-8 /etc/locale.gen | sed 's/\..*$//' | sed '/@/d' | awk '{print $1}' | uniq | sed 's/#//g'))
-    LOCALES=($(grep UTF-8 /etc/locale.gen | sed 's/\_.*$//' | sed 's/#//' | uniq))
-    grep UTF-8 /etc/locale.gen | sed 's/\_.*$//' | sed 's/#//' | uniq
+    LOCALES=($(grep UTF-8 /etc/locale.gen | sed 's/\..*$//' | sed '/@/d' | awk '{print $1}' | uniq | sed 's/#//g'))
+    TOTAL_LOCALE="${#LOCALES[@]}"
+    FIRST_HALF="$TOTAL_LOCALE / 2"
+    SECOND_HALF="$TOTAL_LOCALE - $FIRST_HALF - 1"
+
+    LOCALES_FIRST_HALF=("${LOCALES[@]:0:$FIRST_HALF}")
+    LOCALES_SECOND_HALF=( "${bigArray[@]:$FIRST_HALF:$SECOND_HALF}" )
+    echo "If you cannot able to find your locale in the list, please press N to see second list"
+    # LOCALES=($(grep UTF-8 /etc/locale.gen | sed 's/\_.*$//' | sed 's/#//' | uniq))
     PS3="$PROMPT"
-    select LOCALE in "${LOCALES[@]}"; do
-        if elements_present "$LOCALE" "${LOCALES[@]}"; then
-            # set_option "LOCALE" "\"${LOCALE}.UTF-8 UTF-8\""
-            set_option "LOCALE" "$LOCALE"
+    select LOCALE in "${LOCALES_FIRST_HALF[@]}"; do
+        if elements_present "$LOCALE" "${LOCALES_FIRST_HALF[@]}"; then
+            set_option "LOCALE" "\"${LOCALE}.UTF-8 UTF-8\""
+            # set_option "LOCALE" "$LOCALE"
             break
         else
-            invalid_option
-            set_locale
+            # invalid_option
+            # set_locale
             break
         fi
-    done | column -t
+    done
+    select LOCALE in "${LOCALES_SECOND_HALF[@]}"; do
+    if elements_present "$LOCALE" "${LOCALES_SECOND_HALF[@]}"; then
+        set_option "LOCALE" "\"${LOCALE}.UTF-8 UTF-8\""
+        # set_option "LOCALE" "$LOCALE"
+        break
+    else
+        # invalid_option
+        # set_locale
+        break
+    fi
+done
+
 }
 
 set_desktop() {
