@@ -127,7 +127,7 @@ background_checks() {
     if connection_test; then
         echo -ne "ERROR! There seems to be no internet connection.\n"
         exit 0
-    elif ! mount_check; then
+    elif mount_check; then
         echo -ne "ERROR! Mount point is busy\n"
         exit 0
     fi
