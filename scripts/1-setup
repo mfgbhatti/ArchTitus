@@ -37,7 +37,7 @@ if [[ $TOTALMEM -gt 8000000 ]]; then
 fi
 
 echo "Setup Language and set locale"
-echo "$LOCALE" | sed -i "s/\"//g" >>/etc/locale.gen
+echo "${LOCALE//\"/}" >>/etc/locale.gen
 
 hwclock --systohc
 
