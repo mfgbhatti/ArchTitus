@@ -3,11 +3,11 @@
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
-CONFIG_FILE="$SCRIPT_DIR"/config/setup.conf
+CONFIG_FILE="$SCRIPT_DIR"/configs/setup.conf
 FUNC_FILE="$SCRIPT_DIR"/configs/shared
 LOG_FILE="$SCRIPT_DIR"/configs/main.log
 
-[[ -f "$LOG" ]] && rm -f "$LOG"
+[[ -f "$LOG_FILE" ]] && rm -f "$LOG_FILE"
 
 source_file() {
     if [[ -f "$1" ]]; then
