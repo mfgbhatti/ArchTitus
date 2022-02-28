@@ -20,15 +20,16 @@ source_file "$CONFIG_FILE"
 source_file "$FUNC_FILE"
 
 echo "basic installations"
-install_pkg networkmanager dhclient reflector \
-    rsync git pacman-contrib curl efibootmgr
+install_pkg vim sudo dhclient reflector \
+    base-devel wget rsync git pacman-contrib \
+    curl efibootmgr
 
 install_xorg() {
     install_pkg xorg xorg-server xorg-xinit
 }
 
 install_services() {
-    install_pkg cups bluez bluez-utils cronie ntp dhcpcd
+    install_pkg cups bluez bluez-utils networkmanager cronie ntp dhcpcd
 }
 
 if [[ $TOTALMEM -gt 8000000 ]]; then
@@ -39,6 +40,8 @@ fi
 
 echo "Setup Language and set locale"
 echo "$LOCALE" | sed -i "s/\"//g" >>/etc/locale.gen
+
+hwclock --systohc
 
 locale-gen
 timedatectl --no-ask-password set-timezone "$TIMEZONE"
