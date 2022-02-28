@@ -40,8 +40,6 @@ install_grub_theme() {
     fi
 }
 
-
-logo
 title "Post Install and cleaning"
 if [[ "$BOOTLOADER" =~ "grub" ]]; then
     install_grub_theme

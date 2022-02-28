@@ -11,15 +11,14 @@ source_file() {
         source "$1"
     else
         echo "ERROR! Missing file: $1"
-        echo "exit code is $?"
         exit 1
     fi
 }
 
+echo "exit code is $?"
 source_file "$CONFIG_FILE"
 source_file "$FUNC_FILE"
 
-logo
 echo "basic installations"
 install_pkg networkmanager dhclient reflector \
     rsync git pacman-contrib curl efibootmgr
@@ -258,10 +257,6 @@ else
     echo "You are already a user proceed with aur installs"
 fi
 case "$LAYOUT" in
-"btrfs")
-    echo "Btrfs module added"
-    sed -i '/^MODULES=/s/(/(btrfs/' /etc/mkinitcpio.conf
-    ;;
 "lvm")
     echo "LVM hooks added"
     sed -i "/^HOOK/s/filesystems/${HOOKS[*]}/" /etc/mkinitcpio.conf
@@ -280,12 +275,8 @@ case "$LAYOUT" in
 esac
 
 if [[ "$FS" =~ "btrfs" ]]; then
-    if grep -Eq "MODULES=(btrfs" /etc/mkinitcpio.conf; then
-        echo "Btrfs module already added"
-    else
         echo "Btrfs module added"
         sed -i '/^MODULES=/s/(/(btrfs/' /etc/mkinitcpio.conf
-    fi
 fi
 
 if [[ -f "/etc/mkinitcpio.conf" ]]; then

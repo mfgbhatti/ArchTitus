@@ -139,7 +139,6 @@ mount_boot() {
     fi
 }
 
-logo
 title "Preinstall setup"
 echo "Installing reflector rsync"
 install_pkg pacman-contrib reflector rsync gptfdisk
