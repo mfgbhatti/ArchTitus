@@ -19,7 +19,6 @@ echo "exit code is $?"
 source_file "$CONFIG_FILE"
 source_file "$FUNC_FILE"
 
-echo "basic installations"
 install_pkg vim sudo dhclient reflector \
     base-devel wget rsync git pacman-contrib \
     curl efibootmgr
@@ -50,12 +49,6 @@ localectl --no-ask-password set-locale LANG="$LOCALE" LC_TIME="$LOCALE"
 localectl --no-ask-password set-keymap --no-convert "$KEYMAP"
 
 sudo_no_password "/etc/sudoers"
-
-#Add parallel downloading
-sed -i 's/^#ParallelDownloads/ParallelDownloads/' /etc/pacman.conf
-
-#Enable multilib
-sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
 
 echo "Installing $DESKTOP"
 case "$DESKTOP" in

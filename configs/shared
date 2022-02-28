@@ -42,13 +42,13 @@ set_option() {
 
 install_pkg() {
     for i in "$@"; do
-        sudo pacman -S --noconfirm --needed "$i" >/dev/null 2>&1
+        sudo pacman -S --noconfirm --needed "$i"
         echo "Installing package: $i"
     done
 }
 
 install_aur() {
-    "$AURHELPER" -S --noconfirm --needed "$@" /dev/null 2>&1
+    "$AURHELPER" -S --noconfirm --needed "$@"
 }
 
 invalid_option() {
@@ -161,9 +161,9 @@ end() {
 }
 
 start_jobs() {
-    pacman -Sy --noconfirm >/dev/null 2>&1
+    pacman -Sy --noconfirm
     install_pkg terminus-font
-    fc-cache -fv >/dev/null 2>&1
+    fc-cache -fv  >/dev/null 2>&1
     setfont ter-v22b
 }
 _TIMEZONE="$(curl --fail https://ipapi.co/timezone)"
