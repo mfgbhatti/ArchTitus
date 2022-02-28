@@ -42,7 +42,7 @@ set_option() {
 
 install_pkg() {
     for i in "$@"; do
-        sudo pacman -S --noconfirm --needed "$i"
+        pacman -S --noconfirm --needed "$i" >/dev/null 2>&1
         echo "Installing package: $i"
     done
 }
