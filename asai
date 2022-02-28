@@ -30,6 +30,7 @@ sequence() {
     else
         sudo_password "$MOUNTPOINT/etc/sudoers"
     fi
+    end
     logo
     title "Done - Please Eject Install Media and Reboot"
 
@@ -43,4 +44,3 @@ logo
 title "Scripts are in directory named asai"
 . "$SCRIPT_DIR"/scripts/startup
 sequence |& tee "$LOG_FILE"
-end

@@ -1,4 +1,22 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC1090
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+
+CONFIG_FILE="$SCRIPT_DIR"/configs/setup.conf
+FUNC_FILE="$SCRIPT_DIR"/configs/shared
+
+source_file() {
+    if [[ -f "$1" ]]; then
+        source "$1"
+    else
+        echo "ERROR! Missing file: $1"
+        exit 0
+    fi
+}
+
+source_file "$CONFIG_FILE"
+source_file "$FUNC_FILE"
 
 logo
 echo "basic installations"

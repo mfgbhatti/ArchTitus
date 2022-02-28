@@ -30,14 +30,6 @@ logo() {
     echo -ne "\n"
 }
 
-source_file() {
-    if [[ -f "$1" ]]; then
-        source "$1"
-    else
-        echo "ERROR! Missing file: $1"
-        exit 0
-    fi
-}
 
 PROMPT="Please enter your option: "
 
@@ -46,6 +38,10 @@ set_option() {
         sed -i -e "/^${1}.*/d" "$CONFIG_FILE"
     fi
     echo "${1}=${2}" >>"$CONFIG_FILE"
+}
+
+do_pacstrap() {
+    pacstrap "$1" "$@" --noconfirm --needed >/dev/null 2>&1
 }
 
 install_pkg() {
@@ -131,7 +127,7 @@ background_checks() {
     if connection_test; then
         echo -ne "ERROR! There seems to be no internet connection.\n"
         exit 0
-    elif mount_check; then
+    elif ! mount_check; then
         echo -ne "ERROR! Mount point is busy\n"
         exit 0
     fi

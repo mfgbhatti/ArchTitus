@@ -216,14 +216,14 @@ case "$LAYOUT" in
 esac
 
 if mount_check; then
-    echo -ne "ERROR! Not mounted"
+    echo -ne "ERROR! Not mounted\n"
     exit 0
 else
-    echo -ne "Mounting recheck\n"
+    echo -ne "Mounting rechecked\n"
 fi
 
 echo "Starting pacstrap"
-pacstrap "$MOUNTPOINT" base base-devel linux linux-firmware vim sudo archlinux-keyring wget "${PACKAGES[@]}" --noconfirm --needed
+do_pacstrap "$MOUNTPOINT" base base-devel linux linux-firmware vim sudo archlinux-keyring wget "${PACKAGES[@]}"
 echo "Registering keyserver"
 echo "keyserver hkp://keyserver.ubuntu.com" >>"$MOUNTPOINT"/etc/pacman.d/gnupg/gpg.conf
 
