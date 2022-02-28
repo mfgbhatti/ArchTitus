@@ -58,6 +58,9 @@ case "$DESKTOP" in
 "lxqt")
     install_aur sddm-nordic-theme-git
     ;;
+"kde")
+    install_aur sddm-nordic-theme-git
+    ;;
 "awesome")
     install_aur rofi picom i3lock-fancy xclip ttf-roboto polkit-gnome materia-theme lxappearance flameshot pnmixer network-manager-applet xfce4-power-manager qt5-styleplugins papirus-icon-theme
     git clone "https://github.com/ChrisTitusTech/titus-awesome" "$HOME"/.config/awesome
