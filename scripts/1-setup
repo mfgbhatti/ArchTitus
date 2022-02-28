@@ -11,11 +11,10 @@ source_file() {
         source "$1"
     else
         echo "ERROR! Missing file: $1"
-        exit 1
+        exit 0
     fi
 }
 
-echo "exit code is $?"
 source_file "$CONFIG_FILE"
 source_file "$FUNC_FILE"
 
@@ -53,7 +52,7 @@ sudo_no_password "/etc/sudoers"
 echo "Installing $DESKTOP"
 case "$DESKTOP" in
 "kde")
-
+    install_pkg plasma kf5 sddm plasma-wayland-session
     systemctl enable sddm.service
     ;;
 "gnome")

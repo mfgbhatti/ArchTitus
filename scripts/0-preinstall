@@ -12,7 +12,7 @@ do_btrfs() {
 
     echo "Creating subvolumes and directories"
     for x in "${SUBVOLUMES[@]}"; do
-        btrfs subvolume create "$MOUNTPOINT"/"${x}"
+        btrfs subvolume create "$MOUNTPOINT"/"${x}" >/dev/null 2>&1
     done
 
     umount /mnt
@@ -99,8 +99,8 @@ mount_lvm() {
     vgchange -ay &>/dev/null
     i=0
     while [[ "$i" -le "$LVM_PART_NUM" ]]; do
-        lvchange -ay /dev/"$LVM_VG"/"${LVM_NAMES[$i]}" &>/dev/null
-        do_format /dev/"$LVM_VG"/"${LVM_NAMES[$i]}"
+        lvchange -ay /dev/"$LVM_VG"/"${LVM_NAMES[$i]}" >/dev/null 2>&1
+        do_format /dev/"$LVM_VG"/"${LVM_NAMES[$i]}" 
 
         i=$((i + 1))
     done
@@ -224,7 +224,7 @@ else
 fi
 
 echo "Starting pacstrap"
-pacstrap "$MOUNTPOINT" base linux linux-firmware archlinux-keyring "${PACKAGES[@]}" --noconfirm --needed
+pacstrap "$MOUNTPOINT" base linux linux-firmware archlinux-keyring "${PACKAGES[@]}" --noconfirm --needed >/dev/null 2>&1
 echo "Registering keyserver"
 echo "keyserver hkp://keyserver.ubuntu.com" >>"$MOUNTPOINT"/etc/pacman.d/gnupg/gpg.conf
 
@@ -241,7 +241,7 @@ if [[ $TOTALMEM -lt 8000000 ]]; then
         echo "Setting COW"
         chattr +C "$MOUNTPOINT"/opt/swap
     fi
-    dd if=/dev/zero of="$MOUNTPOINT"/opt/swap/swapfile bs=1M count=2048 status=progress
+    dd if=/dev/zero of="$MOUNTPOINT"/opt/swap/swapfile bs=1M count=2048 status=progress >/dev/null 2>&1
     echo "Setting permissions"
     chmod 600 "$MOUNTPOINT"/opt/swap/swapfile
     chown root "$MOUNTPOINT"/opt/swap/swapfile

@@ -116,8 +116,8 @@ set_partion_layout() {
     title "Setup Partioning Layout"
     LAYOUTS=("Btrfs" "LVM" "LVM+LUKS" "Maintain Current")
     PS3="$PROMPT"
-    select OPT in "${LAYOUTS[@]}"; do
-        if elements_present "$OPT" "${LAYOUTS[@]}"; then
+    select LAY in "${LAYOUTS[@]}"; do
+        if elements_present "$LAY" "${LAYOUTS[@]}"; then
             case "$REPLY" in
             1)
                 set_btrfs
@@ -145,19 +145,19 @@ set_partion_layout() {
                 if [[ -d "/sys/firmware/efi/" ]]; then
                     echo "Select your boot partition"
                     PS3="$PROMPT"
-                    select OPT in "${CHOICE[@]}"; do
-                        if elements_present "$OPT" "${CHOICE[@]}"; then
+                    select BTP in "${CHOICE[@]}"; do
+                        if elements_present "$BTP" "${CHOICE[@]}"; then
                             set_option "LAYOUT" "none"
-                            set_option "BOOT_PARTITION" "$OPT"
+                            set_option "BOOT_PARTITION" "$BTP"
                             break
                         fi
                     done
                 fi
                 echo "Select your root partition"
                 PS3="$PROMPT"
-                select OPT in "${CHOICE[@]}"; do
-                    if elements_present "$OPT" "${CHOICE[@]}"; then
-                        set_option "ROOT_PARTITION" "$OPT"
+                select RTP in "${CHOICE[@]}"; do
+                    if elements_present "$RTP" "${CHOICE[@]}"; then
+                        set_option "ROOT_PARTITION" "$RTP"
                         break
                     fi
                 done
@@ -226,9 +226,9 @@ set_keymap() {
     title "Setup Keymap"
     KEYMAPS=("by" "ca" "cf" "cz" "de" "dk" "es" "et" "fa" "fi" "fr" "gr" "hu" "il" "it" "lt" "lv" "mk" "nl" "no" "pl" "ro" "ru" "sg" "ua" "uk" "us")
     PS3="$PROMPT"
-    select OPT in "${KEYMAPS[@]}"; do
-        if elements_present "$OPT" "${KEYMAPS[@]}"; then
-            set_option "KEYMAP" "$OPT"
+    select MAP in "${KEYMAPS[@]}"; do
+        if elements_present "$MAP" "${KEYMAPS[@]}"; then
+            set_option "KEYMAP" "$MAP"
             break
         else
             invalid_option
@@ -335,16 +335,32 @@ set_locale() {
     select_locale "${LOCALES1[@]}"
 }
 
+set_aur_helper() {
+    title "Select your preferred AUR helper"
+    SELECTION=("yay" "trizen" "aurman" "aura" "pikaur" "none")
+    PS3="$PROMPT"
+    select AUR in "${SELECTION[@]}"; do
+        if elements_present "$AUR" "${SELECTION[@]}"; then
+            set_option "AURHELPER" "$AUR"
+            break
+        else
+            invalid_option
+            set_aur_helper
+            break
+        fi
+    done
+}
+
 set_desktop() {
     title "Select either desktop Environment or Window Manager"
     SELECTION=("Gnome" "KDE" "XFCE" "Mate" "LXQT" "Minimal" "Awesome" "OpenBox" "i3" "i3-Gaps" "Deepin" "Budgie")
     PS3="$PROMPT"
-    select OPT in "${SELECTION[@]}"; do
-        if elements_present "$OPT" "${SELECTION[@]}"; then
-            if [[ "$OPT" != "Minimal" ]]; then
+    select DES in "${SELECTION[@]}"; do
+        if elements_present "$DES" "${SELECTION[@]}"; then
+            if [[ "$DES" != "Minimal" ]]; then
                 set_aur_helper
             fi
-            set_option "DESKTOP" "${OPT,,}"
+            set_option "DESKTOP" "${DES,,}"
             break
 
         else
@@ -356,29 +372,13 @@ set_desktop() {
 
 }
 
-set_aur_helper() {
-    title "Select your preferred AUR helper"
-    SELECTION=("yay" "trizen" "aurman" "aura" "pikaur" "none")
-    PS3="$PROMPT"
-    select OPT in "${SELECTION[@]}"; do
-        if elements_present "$OPT" "${SELECTION[@]}"; then
-            set_option "AURHELPER" "$OPT"
-            break
-        else
-            invalid_option
-            set_aur_helper
-            break
-        fi
-    done
-}
-
 set_grub_theme() {
     title "Choose your preferred GRUB theme"
     SELECTION=("CyberRe" "Cyberpunk" "Shodan" "Vimix" "fallout" "None")
     PS3="$PROMPT"
-    select OPT in "${SELECTION[@]}"; do
-        if elements_present "$OPT" "${SELECTION[@]}"; then
-            set_option "GRUBTHEME" "${OPT}"
+    select THM in "${SELECTION[@]}"; do
+        if elements_present "$THM" "${SELECTION[@]}"; then
+            set_option "GRUBTHEME" "${THM}"
             set_option "THEMEDIR" "/boot/grub/themes"
             break
         else
@@ -395,14 +395,14 @@ set_bootloader() {
     echo "Systemd and UEFI are only available on a UEFI system"
     echo "None will skip a bootloader and you will not be able to boot"
     PS3="$PROMPT"
-    select OPT in "${SELECTION[@]}"; do
-        if elements_present "$OPT" "${SELECTION[@]}"; then
-            if [[ "$OPT" =~ "GRUB" ]]; then
-                set_option "BOOTLOADER" "${OPT,,}"
+    select BLDR in "${SELECTION[@]}"; do
+        if elements_present "$BLDR" "${SELECTION[@]}"; then
+            if [[ "$BLDR" =~ "GRUB" ]]; then
+                set_option "BOOTLOADER" "${BLDR,,}"
                 set_grub_theme
                 break
             fi
-            set_option "BOOTLOADER" "${OPT,,}"
+            set_option "BOOTLOADER" "${BLDR,,}"
             break
         else
             invalid_option
