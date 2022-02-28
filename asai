@@ -20,7 +20,6 @@ source_file() {
 
 sequence() {
     clear
-    title "Starting ASAI..."
     source_file "$CONFIG_FILE"
     . "$SCRIPT_DIR"/scripts/0-preinstall
     arch-chroot "$MOUNTPOINT" /root/asai/scripts/1-setup
