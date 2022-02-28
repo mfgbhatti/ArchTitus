@@ -2,14 +2,15 @@
 # shellcheck disable=SC1090,SC2034
 
 center() {
-  width="$(tput cols)"
-  padding="$(printf '%0.1s' \ {1..500})"
-  printf '%*.*s %s %*.*s\n' 0 "$(((width-2-${#1})/2))" "$padding" "$1" 0 "$(((width-1-${#1})/2))" "$padding"
+    width="$(tput cols)"
+    padding="$(printf '%0.1s' \ {1..500})"
+    printf '%*.*s %s %*.*s\n' 0 "$(((width - 2 - ${#1}) / 2))" "$padding" "$1" 0 "$(((width - 1 - ${#1}) / 2))" "$padding"
 }
 
 title() {
     INPUT="${1//\"/}"
     center "$INPUT"
+    echo " "
 }
 
 logo() {
@@ -23,9 +24,9 @@ logo() {
     center "  .8'   '8. '88888.  8b   '8.'8888.  .8'   '8. '88888.    8 8888"
     center " .888888888. '88888. '8b.  ;8.'8888 .888888888. '88888.   8 8888"
     center ".8'       '8. '88888. 'Y8888P ,88P'.8'       '8. '88888.  8 8888"
-    echo ""   
+    echo -ne "\n"
     center "                Archlinux System Automated Installer            "
-    echo "" 
+    echo -ne "\n"
 }
 
 source_file() {
@@ -46,13 +47,12 @@ set_option() {
     echo "${1}=${2}" >>"$CONFIG_FILE"
 }
 
-install_pkg () {
-    pacman -S --noconfirm --needed "$@" >/dev/null 2>&1
+install_pkg() {
+    sudo pacman -S --noconfirm --needed "$@" >/dev/null 2>&1
 }
 
-something_failed() {
-    echo -ne "ERROR! Something is not right. Exiting.\n"
-    exit 0
+install_aur() {
+    "$AURHELPER" -S --noconfirm --needed "$@" /dev/null 2>&1
 }
 
 invalid_option() {
@@ -95,6 +95,10 @@ connection_test() {
     ping -q -w 1 -c 1 "$(ip r | grep default | awk 'NR==1 {print $3}')" &>/dev/null && return 1 || return 0
 }
 
+mount_check() {
+    [[ "$(grep -E "$MOUNTPOINT" /proc/mounts -c)" -ne 0 ]] && return 1 || return 0
+}
+
 elements_present() {
     for e in "${@:2}"; do [[ "$e" == "$1" ]] && break; done
 }
@@ -109,7 +113,7 @@ set_ntp() {
     timedatectl set-ntp true
 }
 
-background_checks(){
+background_checks() {
     root_check
     docker_check
     arch_check
@@ -117,16 +121,19 @@ background_checks(){
     if connection_test; then
         echo -ne "ERROR! There seems to be no internet connection.\n"
         exit 0
+    elif mount_check; then
+        echo -ne "ERROR! The mountpoint is already in use.\n"
+        exit 0
     fi
     set_ntp
 }
 
 copy_logs() {
     echo "Copying logs"
-    cp -v "$LOG" "$MOUNTPOINT"/var/log/asai.log
+    cp -v "$LOG_FILE" "$MOUNTPOINT"/var/log/asai.log
 }
 
-do_reboot() {
+do_exit() {
     echo "unmounting $MOUNTPOINT"
     if [[ "$LVM" -eq "1" || "$LUKS" -eq "1" ]]; then
         i=0
@@ -136,38 +143,21 @@ do_reboot() {
     fi
     umount -R "$MOUNTPOINT"/boot
     umount -R "$MOUNTPOINT"
-    echo "Rebooting..."
-    reboot
 }
 
 end() {
-    REBOOT="true"
     copy_logs
-    for ((i = 15; i >= 1; i--)); do
-        read -r -s -n 1 -t 1 -p "ASAI is rebooting in $i seconds... Press Esc key to abort or press R key to reboot now."$'\n' KEY
-        CODE="$?"
-        if [ "$CODE" != "0" ]; then
-            continue
-        fi
-        if [[ "$KEY" == $'\e' ]]; then
-            REBOOT="false"
-            break
-        elif [[ "$KEY" == "r" || "$KEY" == "R" ]]; then
-            REBOOT="true"
-            break
-        fi
-    done
-    if [[ "$REBOOT" == "true" ]]; then
-        do_reboot
-    else
-        echo "Reboot is aborted "
-    fi
+    do_exit
 }
 
-pacman -Sy --noconfirm
-install_pkg terminus-font
+start_jobs() {
+    echo "Refreshing pacman database"
+    pacman -Sy --noconfirm >/dev/null 2>&1
+    echo "Installing fonts"
+    install_pkg terminus-font
 
-fc-cache -fv >/dev/null 2>&1
-setfont ter-v22b
-
+    fc-cache -fv >/dev/null 2>&1
+    echo "Setting up fonts"
+    setfont ter-v22b
+}
 _TIMEZONE="$(curl --fail https://ipapi.co/timezone)"

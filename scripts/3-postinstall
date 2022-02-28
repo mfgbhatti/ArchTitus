@@ -1,20 +1,8 @@
 #!/usr/bin/env bash
 
-# shellcheck disable=SC1091
-# shellcheck source=./setup.conf
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-
-CONFIG_FILE="$SCRIPT_DIR"/setup.conf
-if [[ -f "$CONFIG_FILE" ]]; then
-    source "$CONFIG_FILE"
-else
-    echo "ERROR! Missing file: setup.conf"
-    exit 0
-fi
-
 install_grub_theme() {
     if [[ "$GRUBTHEME" =~ "None" ]]; then
-        echo "No grub theme selected. Skipping..."
+        echo "Skipping GRUB theme installation"
     else
         echo -e "Installing $GRUBTHEME Grub theme..."
         git clone https://github.com/ChrisTitusTech/Top-5-Bootloader-Themes "$HOME"/tmp
@@ -41,7 +29,7 @@ if [[ "$BOOTLOADER" =~ "grub" ]]; then
     install_grub_theme
 fi
 
-if [[ "$LAYOUT" -eq 1 || "$DESKTOP" =~ "lxqt" ]]; then
+if [[ "$DESKTOP" =~ "lxqt" || "$DESKTOP" =~ "kde" ]]; then
     echo "Setting up SDDM Theme"
     cat <<EOF >/etc/sddm.conf
 [Theme]
@@ -66,8 +54,8 @@ sed -i 's/^%wheel ALL=(ALL:ALL) NOPASSWD: ALL/# %wheel ALL=(ALL:ALL) NOPASSWD: A
 # Add sudo rights
 sed -i 's/^# %wheel ALL=(ALL:ALL) ALL/%wheel ALL=(ALL:ALL) ALL/' /etc/sudoers
 
-rm -r /root/ArchTitus
-rm -r /home/"$USERNAME"/ArchTitus
+rm -r /root/asai
+rm -r /home/"$USERNAME"/asai
 
 # Replace in the same state
 cd "$(pwd)" || exit 0

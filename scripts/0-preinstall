@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-# shellcheck disable=SC2001
-
 make_boot() {
     if [[ "$UEFI" -eq 1 ]]; then
         mkfs.vfat -F32 -n "$BOOT" "$PART1"
@@ -75,7 +73,8 @@ do_format() {
         mkfs.ntfs -Q -L "$ROOT" "$1"
         ;;
     *)
-        something_failed
+        echo "ERROR! Unsupported filesystem"
+        exit 0
         ;;
     esac
 
@@ -138,7 +137,7 @@ mount_boot() {
 
 logo
 title "Preinstall setup"
-echo "Setting up mirrors for faster downloads"
+echo "installing reflector rsync"
 install_pkg pacman-contrib reflector rsync gptfdisk
 
 sed -i 's/^#ParallelDownloads/ParallelDownloads/' /etc/pacman.conf
@@ -146,8 +145,8 @@ sed -i 's/^#ParallelDownloads/ParallelDownloads/' /etc/pacman.conf
 if [[ ! -f /etc/pacman.d/mirrorlist.backup ]]; then
     cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.backup
 fi
-
-reflector --age 48 --country "$ISO" -f 5 --latest 20 --protocol https --sort rate --save /etc/pacman.d/mirrorlist
+echo "Generating new mirrorlist"
+reflector --age 48 --country "$ISO" -f 5 --latest 20 --protocol https --sort rate --save /etc/pacman.d/mirrorlist >/dev/null 2>&1
 mkdir "$MOUNTPOINT" &>/dev/null
 
 echo "File system setup"
@@ -162,14 +161,14 @@ fi
 set_option "PART2" "$PART2"
 
 case "$LAYOUT" in
-btrfs)
+"btrfs")
     do_partition
     make_boot
     do_btrfs "$ROOT" "$PART2"
     mount_boot
     ;;
 
-lvm)
+"lvm")
     PACKAGES+=("lvm2")
     do_partition
     sgdisk --typecode=2:8e00 "$DISK"
@@ -183,7 +182,7 @@ lvm)
     set_option "HOOKS" "(lvm2 filesystems)"
     ;;
 
-luks)
+"luks")
     PACKAGES+=("cryptsetup" "lvm2")
     do_partition
     make_boot
@@ -198,7 +197,7 @@ luks)
     set_option "HOOKS" "(base udev autodetect keyboard keymap consolefont modconf block lvm2 encrypt filesystems fsck)"
     ;;
 
-none)
+"none")
     modprobe dm-mod
     vgscan &>/dev/null
     vgchange -ay &>/dev/null
@@ -211,29 +210,27 @@ none)
     ;;
 
 *)
-    something_failed
+    echo "ERROR! Unsupported Partition layout"
+    exit 0
     ;;
 esac
 
-if [[ "$(grep -E "$MOUNTPOINT" /proc/mounts -c)" -eq "0" ]]; then
-    echo "Drive is not mounted can not continue"
-    echo "Rebooting in 3 Seconds ..." && sleep 1
-    echo "Rebooting in 2 Seconds ..." && sleep 1
-    echo "Rebooting in 1 Second ..." && sleep 1
+if ! mount_check; then
+    echo -ne "ERROR! The mountpoint is not in use.\n"
     exit 0
 fi
 
-echo "Arch Install on Main Drive"
-pacstrap "$MOUNTPOINT" base base-devel linux linux-firmware vim sudo archlinux-keyring wget libnewt "${PACKAGES[@]}" --noconfirm --needed
+echo "Starting pacstrap"
+pacstrap "$MOUNTPOINT" base base-devel linux linux-firmware vim sudo archlinux-keyring wget "${PACKAGES[@]}" --noconfirm --needed
+echo "Registering keyserver"
 echo "keyserver hkp://keyserver.ubuntu.com" >>"$MOUNTPOINT"/etc/pacman.d/gnupg/gpg.conf
 
 echo "Generating fstab"
 genfstab -U "$MOUNTPOINT" >>"$MOUNTPOINT"/etc/fstab
 
-cp -R "$SCRIPT_DIR" "$MOUNTPOINT"/root/ArchTitus
+cp -R "$SCRIPT_DIR" "$MOUNTPOINT"/root/asai
 cp /etc/pacman.d/mirrorlist "$MOUNTPOINT"/etc/pacman.d/mirrorlist
 
-TOTALMEM="$(grep -i "memtotal" "/proc/meminfo" | grep -o '[[:digit:]]*')"
 if [[ $TOTALMEM -lt 8000000 ]]; then
     echo "Checking for low memory systems "
     mkdir -p "$MOUNTPOINT"/opt/swap &>/dev/null
@@ -241,7 +238,7 @@ if [[ $TOTALMEM -lt 8000000 ]]; then
         chattr +C "$MOUNTPOINT"/opt/swap
     fi
     dd if=/dev/zero of="$MOUNTPOINT"/opt/swap/swapfile bs=1M count=2048 status=progress
-    chmod 600 "$MOUNTPOINT"/opt/swap/swapfile 
+    chmod 600 "$MOUNTPOINT"/opt/swap/swapfile
     chown root "$MOUNTPOINT"/opt/swap/swapfile
     mkswap "$MOUNTPOINT"/opt/swap/swapfile
     swapon "$MOUNTPOINT"/opt/swap/swapfile

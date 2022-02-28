@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC1091,SC1090
 
-# Find the name of the folder the scripts are in
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
 CONFIG_FILE="$SCRIPT_DIR"/config/setup.conf
-FUNC_FILE="$SCRIPT_DIR"/config/shared
-LOG="$SCRIPT_DIR"/main.log
+FUNC_FILE="$SCRIPT_DIR"/configs/shared
+LOG_FILE="$SCRIPT_DIR"/configs/main.log
+
 [[ -f "$LOG" ]] && rm -f "$LOG"
 
 source_file() {
@@ -19,22 +19,25 @@ source_file() {
 }
 
 sequence() {
-    echo -ne "Starting ASAI...\n"
+    title "Starting ASAI..."
     source_file "$CONFIG_FILE"
     . "$SCRIPT_DIR"/scripts/0-preinstall
     arch-chroot "$MOUNTPOINT" /root/asai/scripts/1-setup
-    arch-chroot "$MOUNTPOINT" /usr/bin/runuser -u "$USERNAME" -- /home/"$USERNAME"/asai/scripts/2-user
-    arch-chroot "$MOUNTPOINT" /root/asai/scripts/3-postinstall
+    if [[ "$DESKTOP" != "minimal" ]]; then
+        arch-chroot "$MOUNTPOINT" /usr/bin/runuser -u "$USERNAME" -- /home/"$USERNAME"/asai/scripts/2-user
+        arch-chroot "$MOUNTPOINT" /root/asai/scripts/3-postinstall
+    fi
     logo
     title "Done - Please Eject Install Media and Reboot"
 
 }
 
 source_file "$FUNC_FILE"
+background_checks
+start_jobs
 clear
 logo
-background_checks
 title "Scripts are in directory named asai"
 . "$SCRIPT_DIR"/scripts/startup
-sequence |& tee "$LOG"
+sequence |& tee "$LOG_FILE"
 end

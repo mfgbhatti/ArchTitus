@@ -1,14 +1,6 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2207,SC2120
 
-# SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-
-# Set up a config file
-CONFIG_FILE="$SCRIPT_DIR"/config/setup.conf
-FUNC_FILE="$SCRIPT_DIR"/config/shared
-
-source_file "$FUNC_FILE"
-
 [[ -f "$CONFIG_FILE" ]] && rm -f "$CONFIG_FILE" >/dev/null 2>&1
 
 do_curl() {
@@ -16,11 +8,15 @@ do_curl() {
     set_option "ISO" "$_ISO"
 }
 
+hardware_check() {
+    _MEM="$(grep -i "memtotal" "/proc/meminfo" | grep -o '[[:digit:]]*')"
+    _CPU="$(grep -c ^processor /proc/cpuinfo)"
+    set_option "TOTALMEM" "$_MEM"
+    set_option "CPU" "$_CPU"
+}
+
 efi_check() {
     if [[ -d "/sys/firmware/efi/" ]]; then
-        if (mount | grep /sys/firmware/efi/efivars); then
-            (mount -t efivarfs efivarfs /sys/firmware/efi/efivars) >/dev/null 2>&1
-        fi
         set_option "UEFI" 1
     else
         set_option "UEFI" 0
@@ -50,6 +46,7 @@ set_btrfs() {
 }
 
 set_lvm() {
+    # needs cleaning
     read -r -p "Name your lvm volume group [like MyVolGroup, default is MyVolGroup]: " _VG
     if [[ -z "$_VG" ]]; then
         _VG="MyVolGroup"
@@ -94,7 +91,7 @@ set_password() {
     if [[ "$PASSWORD1" == "$PASSWORD2" ]]; then
         set_option "$1" "$PASSWORD1"
     else
-        echo -ne "ERROR! Passwords do not match \n"
+        echo -ne "ERROR! Passwords do not match. \n"
         set_password
     fi
 }
@@ -123,11 +120,14 @@ set_partion_layout() {
         if elements_present "$OPT" "${LAYOUTS[@]}"; then
             case "$REPLY" in
             1)
+                set_btrfs
                 set_option "LAYOUT" "btrfs"
+                set_option "FS" "btrfs"
                 break
                 ;;
             2)
                 set_option "LAYOUT" "lvm"
+                set_filesystem
                 set_lvm
                 break
                 ;;
@@ -135,6 +135,7 @@ set_partion_layout() {
                 set_lvm
                 set_option "LAYOUT" "luks"
                 set_option "LUKS_PATH" "/dev/mapper/luks"
+                set_filesystem
                 set_password "LUKS_PASSWORD"
                 break
                 ;;
@@ -161,6 +162,7 @@ set_partion_layout() {
                     fi
                 done
                 break
+                set_filesystem
                 ;;
             *)
                 invalid_option
@@ -309,6 +311,7 @@ set_locale() {
         select LOCALE in "$@"; do
             if elements_present "$LOCALE" "$@"; then
                 if [[ "$LOCALE" =~ "Load Second List" ]]; then
+                    clear
                     select_locale "${LOCALES2[@]}"
                     break
                 elif [[ "$LOCALE" =~ "Load Third List" ]]; then
@@ -328,7 +331,6 @@ set_locale() {
     LOCALES1=("Load Second List" "${LOCALES[@]:0:101}")
     LOCALES2=("Load Third List" "${LOCALES[@]:102:201}")
     LOCALES3=("${LOCALES[@]:202:303}")
-
     PS3="$PROMPT"
     select_locale "${LOCALES1[@]}"
 }
@@ -386,7 +388,7 @@ set_grub_theme() {
 
 set_bootloader() {
     title "Select your bootloader"
-    SELECTION=("GRUB" "Systemd" "UEFI" "None")
+    SELECTION=("GRUB" "Systemd" "EFISTUB" "None")
     echo "Systemd and UEFI are only available on a UEFI system"
     echo "None will skip a bootloader and you will not be able to boot"
     PS3="$PROMPT"
@@ -407,12 +409,21 @@ set_bootloader() {
     done
 }
 
+run_tasks() {
+    do_curl
+    efi_check
+    hardware_check
+    write_to_config
+}
+
 make_choice() {
+    run_tasks
     logo
     user_info
     set_timezone
     set_keymap
     clear
+    logo
     set_locale
     disk_selection
     clear
@@ -420,7 +431,6 @@ make_choice() {
     ssd_drive
     # Advance options
     set_partion_layout
-    set_filesystem
     clear
     logo
     set_aur_helper
@@ -429,9 +439,5 @@ make_choice() {
 
 }
 
-# do_curl
-# efi_check
-# clear
-# make_choice
-# write_to_config
-set_locale
+make_choice
+# set_locale
