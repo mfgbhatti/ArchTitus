@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC1090
 
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+SCRIPT_DIR="$HOME/asai"
 
 CONFIG_FILE="$SCRIPT_DIR"/configs/setup.conf
 FUNC_FILE="$SCRIPT_DIR"/configs/shared

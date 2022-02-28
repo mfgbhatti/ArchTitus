@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC1090
 
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+SCRIPT_DIR="$HOME/asai"
 
 CONFIG_FILE="$SCRIPT_DIR"/configs/setup.conf
 FUNC_FILE="$SCRIPT_DIR"/configs/shared
@@ -11,7 +11,8 @@ source_file() {
         source "$1"
     else
         echo "ERROR! Missing file: $1"
-        exit 0
+        echo "exit code is $?"
+        exit 1
     fi
 }
 
@@ -248,8 +249,10 @@ echo "Adding User and hostname"
 if [ "$(id -u)" -eq "0" ]; then
     useradd -m -G wheel -s /bin/bash "$USERNAME"
     echo "$USERNAME:$PASSWORD" | chpasswd
-    cp -R /root/asai /home/"$USERNAME"/
-    chown -R "$USERNAME": /home/"$USERNAME"/asai
+    if [[ "$DESKTOP" != "minimal" ]]; then
+        cp -R "$SCRIPT_DIR" /home/"$USERNAME"/
+        chown -R "$USERNAME": /home/"$USERNAME"/asai
+    fi
     echo "$HOSTNAME" >>/etc/hostname
 else
     echo "You are already a user proceed with aur installs"

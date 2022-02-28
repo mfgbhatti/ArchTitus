@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC1090
 
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+SCRIPT_DIR="$HOME/asai"
 
 CONFIG_FILE="$SCRIPT_DIR"/configs/setup.conf
 FUNC_FILE="$SCRIPT_DIR"/configs/shared
@@ -11,6 +11,7 @@ source_file() {
         source "$1"
     else
         echo "ERROR! Missing file: $1"
+        echo "exit code is $?"
         exit 0
     fi
 }
