@@ -40,10 +40,6 @@ set_option() {
     echo "${1}=${2}" >>"$CONFIG_FILE"
 }
 
-do_pacstrap() {
-    pacstrap "$1" "$@" --noconfirm --needed >/dev/null 2>&1
-}
-
 install_pkg() {
     sudo pacman -S --noconfirm --needed "$@" >/dev/null 2>&1
 }
