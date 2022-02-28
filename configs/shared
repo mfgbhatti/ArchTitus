@@ -56,7 +56,7 @@ install_aur() {
 }
 
 invalid_option() {
-    echo -ne "ERROR! Your selected option is invalid, retry \n"
+    echo -ne "ERROR! Your selected option is invalid, retry... \n"
 }
 
 root_check() {
@@ -66,12 +66,21 @@ root_check() {
     fi
 }
 
+sudo_no_password() {
+    sed -i 's/^# %wheel ALL=(ALL:ALL) NOPASSWD: ALL/%wheel ALL=(ALL:ALL) NOPASSWD: ALL/' "$1"
+}
+
+sudo_password() {
+    sed -i 's/^%wheel ALL=(ALL:ALL) NOPASSWD: ALL/# %wheel ALL=(ALL:ALL) NOPASSWD: ALL/' "$1"
+    sed -i 's/^# %wheel ALL=(ALL:ALL) ALL/%wheel ALL=(ALL:ALL) ALL/' "$1"
+}
+
 docker_check() {
     if awk -F/ '$2 == "docker"' /proc/self/cgroup | read -r; then
-        echo -ne "ERROR! Docker container not supported (at the moment)\n"
+        echo -ne "ERROR! Docker container is not supported (at the moment)\n"
         exit 0
     elif [[ -f /.dockerenv ]]; then
-        echo -ne "ERROR! Docker container not supported (at the moment)\n"
+        echo -ne "ERROR! Docker container is not supported (at the moment)\n"
         exit 0
     fi
 }
@@ -122,7 +131,7 @@ background_checks() {
         echo -ne "ERROR! There seems to be no internet connection.\n"
         exit 0
     elif mount_check; then
-        echo -ne "ERROR! The mountpoint is already in use.\n"
+        echo -ne "ERROR! Mount point is busy\n"
         exit 0
     fi
     set_ntp
@@ -130,7 +139,12 @@ background_checks() {
 
 copy_logs() {
     echo "Copying logs"
-    cp -v "$LOG_FILE" "$MOUNTPOINT"/var/log/asai.log
+    if [[ "$(find "$MOUNTPOINT"/var/log -type d | wc -l)" -ne 0 ]]; then
+        cp -v "$LOG_FILE" "$MOUNTPOINT"/var/log/asai.log
+    else
+        echo -ne "ERROR! Log directory not found"
+        exit 0
+    fi
 }
 
 do_exit() {
@@ -151,13 +165,9 @@ end() {
 }
 
 start_jobs() {
-    echo "Refreshing pacman database"
     pacman -Sy --noconfirm >/dev/null 2>&1
-    echo "Installing fonts"
     install_pkg terminus-font
-
     fc-cache -fv >/dev/null 2>&1
-    echo "Setting up fonts"
     setfont ter-v22b
 }
 _TIMEZONE="$(curl --fail https://ipapi.co/timezone)"

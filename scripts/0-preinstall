@@ -215,8 +215,10 @@ case "$LAYOUT" in
     ;;
 esac
 
-if ! mount_check; then
-    echo -ne "ERROR! The mountpoint is not in use.\n"
+if mount_check; then
+    echo -ne "Mounting recheck\n"
+else
+    echo -ne "ERROR! Not mounted"
     exit 0
 fi
 
