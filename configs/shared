@@ -8,6 +8,7 @@ center() {
 }
 
 title() {
+    echo " "
     INPUT="${1//\"/}"
     center "$INPUT"
     echo " "
