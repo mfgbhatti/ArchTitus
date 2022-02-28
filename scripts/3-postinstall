@@ -24,19 +24,13 @@ install_grub_theme() {
     else
         echo -e "Installing $GRUBTHEME Grub theme..."
         git clone https://github.com/ChrisTitusTech/Top-5-Bootloader-Themes "$HOME"/tmp
-        echo -e "Creating the theme directory..."
         mkdir -p "$THEMEDIR"/"$GRUBTHEME"
-        echo -e "Copying the theme..."
-        cd "$HOME"/tmp/themes || exit 0
-        cp -a "$GRUBTHEME"/* "$THEMEDIR"/"$GRUBTHEME"
-        echo -e "Backing up Grub config..."
+        cp -a "$HOME"/tmp/themes/"$GRUBTHEME"/* "$THEMEDIR"/"$GRUBTHEME"
         cp -an /etc/default/grub /etc/default/grub.bak
-        echo -e "Setting the theme as the default..."
         grep "GRUB_THEME=" /etc/default/grub >/dev/null 2>&1 && sed -i '/GRUB_THEME=/d' /etc/default/grub
         echo "GRUB_THEME=\"$THEMEDIR/$GRUBTHEME/theme.txt\"" >>/etc/default/grub
         echo -e "Updating grub..."
         grub-mkconfig -o /boot/grub/grub.cfg
-        echo -e "All set!"
     fi
 }
 

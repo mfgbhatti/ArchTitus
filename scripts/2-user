@@ -23,16 +23,18 @@ title "Installing AUR helper"
 cd "$HOME" || exit 0
 case "$AURHELPER" in
 "yay")
-
+    install_pkg "go"
     git clone "https://aur.archlinux.org/yay.git"
     ;;
 "trizen")
+    install_pkg "perl"
     git clone "https://aur.archlinux.org/trizen.git"
     ;;
 "aurman")
     git clone "https://aur.archlinux.org/aurman.git"
     ;;
 "aura")
+    install_pkg "stack"
     git clone "https://aur.archlinux.org/aura.git"
     ;;
 "pikaur")

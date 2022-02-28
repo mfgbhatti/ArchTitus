@@ -18,7 +18,7 @@ source_file() {
 source_file "$CONFIG_FILE"
 source_file "$FUNC_FILE"
 
-install_pkg vim sudo dhclient reflector \
+install_pkg vim dhclient reflector \
     base-devel wget rsync git pacman-contrib \
     curl efibootmgr
 
@@ -49,7 +49,7 @@ localectl --no-ask-password set-keymap --no-convert "$KEYMAP"
 
 sudo_no_password "/etc/sudoers"
 
-echo "Installing $DESKTOP"
+echo "Installing desktop: $DESKTOP"
 case "$DESKTOP" in
 "kde")
     install_pkg plasma kf5 sddm plasma-wayland-session
@@ -126,18 +126,15 @@ case "$DESKTOP" in
 
 esac
 
-echo "Installing Microcode"
 # determine processor type and install microcode
 PROC_TYPE="$(lscpu | grep "Vendor ID:" | awk '{print $3}' | head -1)"
 
 case "$PROC_TYPE" in
 "GenuineIntel")
-    echo "Installing Intel microcode"
     install_pkg intel-ucode
     IMG=intel-ucode.img
     ;;
 "AuthenticAMD")
-    echo "Installing AMD microcode"
     install_pkg amd-ucode
     IMG=amd-ucode.img
     ;;

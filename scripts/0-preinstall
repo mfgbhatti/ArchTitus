@@ -224,7 +224,7 @@ else
 fi
 
 echo "Starting pacstrap"
-pacstrap "$MOUNTPOINT" base linux linux-firmware archlinux-keyring "${PACKAGES[@]}" --noconfirm --needed >/dev/null 2>&1
+pacstrap "$MOUNTPOINT" base linux linux-firmware archlinux-keyring sudo "${PACKAGES[@]}" --noconfirm --needed >/dev/null 2>&1
 echo "Registering keyserver"
 echo "keyserver hkp://keyserver.ubuntu.com" >>"$MOUNTPOINT"/etc/pacman.d/gnupg/gpg.conf
 
