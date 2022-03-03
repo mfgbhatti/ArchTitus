@@ -26,10 +26,10 @@ do_btrfs() {
 }
 
 # list of packages to install
-PACKAGES=()
+PACKAGES=(base linux linux-firmware archlinux-keyring sudo)
 
 do_format() {
-    echo "File system setup"
+    echo "$FS setup"
     case "$FS" in
     "xfs")
         install_pkg xfsprogs
@@ -224,7 +224,7 @@ else
 fi
 
 echo "Starting pacstrap"
-pacstrap "$MOUNTPOINT" base linux linux-firmware archlinux-keyring sudo "${PACKAGES[@]}" --noconfirm --needed >/dev/null 2>&1
+pacstrap "$MOUNTPOINT" "${PACKAGES[@]}" --noconfirm --needed >/dev/null 2>&1
 echo "Registering keyserver"
 echo "keyserver hkp://keyserver.ubuntu.com" >>"$MOUNTPOINT"/etc/pacman.d/gnupg/gpg.conf
 
@@ -246,7 +246,7 @@ if [[ $TOTALMEM -lt 8000000 ]]; then
     chmod 600 "$MOUNTPOINT"/opt/swap/swapfile
     chown root "$MOUNTPOINT"/opt/swap/swapfile
     echo "Making swap on"
-    mkswap "$MOUNTPOINT"/opt/swap/swapfile
-    swapon "$MOUNTPOINT"/opt/swap/swapfile
+    mkswap "$MOUNTPOINT"/opt/swap/swapfile >/dev/null 2>&1
+    swapon "$MOUNTPOINT"/opt/swap/swapfile >/dev/null 2>&1
     echo -e "/opt/swap/swapfile\tnone     \tswap     \tsw\t0 0" >>"$MOUNTPOINT"/etc/fstab
 fi
