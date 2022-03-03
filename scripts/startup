@@ -62,18 +62,19 @@ set_lvm() {
     if [[ -z "$_PART_NUM" ]]; then
         _PART_NUM=1
         _LVM_NAMES+=("root")
-        # LVM_SIZES+=("100%FREE")
         i=2
     fi
     while [[ $i -le "$_PART_NUM" ]]; do
-        if [[ "$_PART_NUM" -eq "1" ]]; then
+        if [[ "$i" -eq "$_PART_NUM" ]]; then
             read -r -p "Enter last partition name [like home]: " _LVM_NAME
+            echo "The size will be remaining space on the disk"
             _LVM_NAMES+=("$_LVM_NAME")
+        else
+            read -r -p "Enter $i partition name [like root]: " _LVM_NAME
+            _LVM_NAMES+=("$_LVM_NAME")
+            read -r -p "Enter $i partition size [like 25G, 200M]: " _LVM_SIZE
+            LVM_SIZES+=("$_LVM_SIZE")
         fi
-        read -r -p "Enter $i partition name [like root]: " _LVM_NAME
-        _LVM_NAMES+=("$_LVM_NAME")
-        read -r -p "Enter $i partition size [like 25G, 200M]: " _LVM_SIZE
-        LVM_SIZES+=("$_LVM_SIZE")
         i=$((i + 1))
     done
     IFS=" " read -r -a LVM_NAMES <<<"$(tr ' ' '\n' <<<"${_LVM_NAMES[@]}" | awk '!x[$0]++' | tr '\n' ' ')"
@@ -441,5 +442,5 @@ make_choice() {
     set_bootloader
 }
 
-make_choice
-# set_locale
+# make_choice
+set_lvm
