@@ -422,7 +422,6 @@ make_choice() {
     disk_selection
     clear
     logo
-    ssd_drive
     # Advance options
     set_partion_layout
     clear
