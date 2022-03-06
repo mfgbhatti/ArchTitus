@@ -3,9 +3,9 @@
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
-CONFIG_FILE="$SCRIPT_DIR"/configs/setup.conf
 FUNC_FILE="$SCRIPT_DIR"/configs/shared
 LOG_FILE="$SCRIPT_DIR"/configs/main.log
+CONFIG_FILE="$SCRIPT_DIR"/configs/setup.conf
 
 [[ -f "$LOG_FILE" ]] && rm -f "$LOG_FILE"
 

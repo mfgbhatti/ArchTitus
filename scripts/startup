@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2207,SC2120
+# shellcheck disable=SC2207,SC2120,SC1087,SC2034
 
 [[ -f "$CONFIG_FILE" ]] && rm -f "$CONFIG_FILE" >/dev/null 2>&1
 
@@ -300,14 +300,14 @@ set_locale() {
     select_locale() {
         select LOCALE in "$@"; do
             if elements_present "$LOCALE" "$@"; then
-                if [[ "$LOCALE" =~ "Load Second List" ]]; then
-                    clear
-                    select_locale "${LOCALES2[@]}"
-                    break
-                elif [[ "$LOCALE" =~ "Load Third List" ]]; then
-                    select_locale "${LOCALES3[@]}"
-                    break
-                fi
+                x=2
+                while [[ "$x" -lt "6" ]]; do
+                    if [[ "$LOCALE" == "Load $x List" ]]; then
+                        NAME="LOCALES$x[@]"     # SC1087
+                        select_locale "${!NAME}"
+                    fi
+                    x=$((x+1))
+                done
                 set_option "LOCALE" "\"${LOCALE}.UTF-8 UTF-8\""
                 break
             else
@@ -318,9 +318,12 @@ set_locale() {
         done
     }
     LOCALES=($(grep UTF-8 /etc/locale.gen | sed 's/\..*$//' | sed '/@/d' | awk '{print $1}' | uniq | sed 's/#//g'))
-    LOCALES1=("Load Second List" "${LOCALES[@]:0:101}")
-    LOCALES2=("Load Third List" "${LOCALES[@]:102:201}")
-    LOCALES3=("${LOCALES[@]:202:303}")
+    SIZE=$((${#LOCALES[@]} / 6))
+    LOCALES1=("Load 2 List" "${LOCALES[@]::$SIZE}") # SC2034
+    LOCALES2=("Load 3 List" "${LOCALES[@]:60:$SIZE}")
+    LOCALES3=("Load 4 List" "${LOCALES[@]:120:SIZE}")
+    LOCALES4=("Load 5 List" "${LOCALES[@]:180:SIZE}")
+    LOCALES5=("${LOCALES[@]:240:63}")
     PS3="$PROMPT"
     select_locale "${LOCALES1[@]}"
 }
@@ -431,4 +434,4 @@ make_choice() {
 }
 
 # make_choice
-disk_selection
+set_locale
