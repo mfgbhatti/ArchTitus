@@ -3,8 +3,8 @@
 
 SCRIPT_DIR="$HOME/asai"
 
-CONFIG_FILE="$SCRIPT_DIR"/configs/setup.conf
 FUNC_FILE="$SCRIPT_DIR"/configs/shared
+CONFIG_FILE="$SCRIPT_DIR"/configs/setup.conf
 
 source_file() {
     if [[ -f "$1" ]]; then
@@ -15,8 +15,8 @@ source_file() {
     fi
 }
 
-source_file "$CONFIG_FILE"
 source_file "$FUNC_FILE"
+source_file "$CONFIG_FILE"
 
 title "Installing AUR helper"
 
