@@ -317,7 +317,7 @@ set_locale() {
             fi
         done
     }
-    LOCALES=($(grep UTF-8 /etc/locale.gen | sed 's/\..*$//' | sed '/@/d' | awk '{print $1}' | uniq | sed 's/#//g'))
+    LOCALES=("$(grep UTF-8 /etc/locale.gen | sed 's/\..*$//' | sed '/@/d' | awk '{print $1}' | uniq | sed 's/#//g')")
     SIZE=$((${#LOCALES[@]} / 6))
     LOCALES1=("Load 2 List" "${LOCALES[@]::$SIZE}") # SC2034
     LOCALES2=("Load 3 List" "${LOCALES[@]:60:$SIZE}")
@@ -414,24 +414,20 @@ run_tasks() {
 
 make_choice() {
     run_tasks
-    clear
     logo
     user_info
     set_timezone
     set_keymap
-    clear
     logo
     set_locale
     disk_selection
-    clear
     logo
     # Advance options
     set_partion_layout
-    clear
     logo
     set_desktop
     set_bootloader
 }
 
-# make_choice
-set_locale
+make_choice
+# set_locale
