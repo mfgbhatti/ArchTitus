@@ -3,7 +3,7 @@
 
 SCRIPT_DIR="$HOME/asai"
 
-CONFIG_FILE="$SCRIPT_DIR"/configs/setup
+CONFIG_FILE="$SCRIPT_DIR"/configs/setup.conf
 
 source_setup() {
     if [[ -f "$CONFIG_FILE" ]]; then
