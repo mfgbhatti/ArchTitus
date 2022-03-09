@@ -3,20 +3,18 @@
 
 SCRIPT_DIR="$HOME/asai"
 
-FUNC_FILE="$SCRIPT_DIR"/configs/shared
-CONFIG_FILE="$SCRIPT_DIR"/configs/setup.conf
+CONFIG_FILE="$SCRIPT_DIR"/configs/setup
 
-source_file() {
-    if [[ -f "$1" ]]; then
-        source "$1"
+source_setup() {
+    if [[ -f "$CONFIG_FILE" ]]; then
+        source "$CONFIG_FILE"
     else
-        echo "ERROR! Missing file: $1"
+        echo "ERROR! Missing file: $CONFIG_FILE"
         exit 0
     fi
 }
 
-source_file "$FUNC_FILE"
-source_file "$CONFIG_FILE"
+source_setup
 
 install_pkg vim dhclient reflector \
     base-devel wget rsync git pacman-contrib \
@@ -37,86 +35,72 @@ if [[ $TOTALMEM -gt 8000000 ]]; then
 fi
 
 echo "Setup Language and set locale"
-echo "${LOCALE//\"/}" >>/etc/locale.gen
+LOCALE="${LOCALE//\"/}"
+echo "$LOCALE" >>/etc/locale.gen
 
 hwclock --systohc
 
 locale-gen
 timedatectl --no-ask-password set-timezone "$TIMEZONE"
 timedatectl --no-ask-password set-ntp 1
-localectl --no-ask-password set-locale LANG="$LOCALE" LC_TIME="$LOCALE"
+localectl --no-ask-password set-locale LANG="${LOCALE%%[[:space:]*]}" LC_TIME="${LOCALE[[:space:]]*}"
 localectl --no-ask-password set-keymap --no-convert "$KEYMAP"
 
 sudo_no_password "/etc/sudoers"
 
 echo "Installing desktop: $DESKTOP"
+if [[ "$DESKTOP" =~ "minimal" ]]; then
+    install_xorg
+else
+    install_xorg
+    install_services
+fi
 case "$DESKTOP" in
 "kde")
     install_pkg plasma kf5 sddm plasma-wayland-session
     systemctl enable sddm.service
     ;;
 "gnome")
-    install_xorg
     install_pkg gnome gnome-extra gnome-software gnome-initial-setup gnome-tweak-tool gnome-power-manager
-    install_services
     systemctl enable gdm.service
     ;;
 "xfce")
-    install_xorg
     install_pkg xfce4 xfce4-goodies lightdm lightdm-gtk-greeter pavucontrol pulseaudio
-    install_services
     systemctl enable lightdm.service
     ;;
 "mate")
-    install_xorg
     install_pkg mate mate-extra lightdm lightdm-gtk-greeter
-    install_services
     systemctl enable lightdm.service
     ;;
 "lxqt")
-    install_xorg
     install_pkg lxqt breeze-icons sddm
-    install_services
     systemctl enable sddm.service
     ;;
 "openbox")
-    install_xorg
     install_pkg openbox obconf xterm lightdm lightdm-gtk-greeter
-    install_services
     systemctl enable lightdm.service
     ;;
 "awesome")
-    install_xorg
     install_pkg awesome vicious xterm lightdm lightdm-gtk-greeter
-    install_services
     systemctl enable lightdm.service
     ;;
 "minimal")
-    install_xorg
     ;;
 "i3")
-    install_xorg
     install_pkg i3-wm i3blocks i3lock i3status dmenu rxvt-unicode lightdm lightdm-gtk-greeter
-    install_services
     systemctl enable lightdm.service
     ;;
 "i3-gaps")
-    install_xorg
     install_pkg i3-gaps i3blocks i3lock i3status dmenu rxvt-unicode lightdm lightdm-gtk-greeter
-    install_services
     systemctl enable lightdm.service
     ;;
 "deepin")
-    install_xorg
     install_pkg deepin deepin-extra deepin-kwin
-    install_services
     sed -i 's/^#greeter-session=.*/greeter-session=lightdm-deepin-greeter/' /etc/lightdm/lightdm.conf
     systemctl enable lightdm.service
     ;;
 "budgie")
-    install_xorg
     install_pkg budgie-desktop budgie-desktop-view budgie-screensaver gnome-control-center network-manager-applet gnome
-    install_services
     systemctl enable gdm.service
     ;;
 *)
@@ -126,17 +110,12 @@ case "$DESKTOP" in
 
 esac
 
-# determine processor type and install microcode
-PROC_TYPE="$(lscpu | grep "Vendor ID:" | awk '{print $3}' | head -1)"
-
-case "$PROC_TYPE" in
-"GenuineIntel")
+case "$PROCESSOR" in
+"intel")
     install_pkg intel-ucode
-    IMG=intel-ucode.img
     ;;
-"AuthenticAMD")
+"amd")
     install_pkg amd-ucode
-    IMG=amd-ucode.img
     ;;
 *)
     echo "ERROR: Unknown processor type"
@@ -144,18 +123,27 @@ case "$PROC_TYPE" in
     ;;
 esac
 
-echo "Installing Graphics Drivers"
-# Graphics Drivers find and install
-if [[ "$(lspci | grep -E '(NVIDIA|GeForce)' -c)" -gt "0" ]]; then
-    install_pkg "nvidia nvidia-utils libglvnd"
-elif [[ "$(lspci | grep -E '(Radeon|AMD)' -c)" -gt "0" ]]; then
-    install_pkg "xf86-video-amdgpu mesa-libgl mesa-vdpau libvdpau-va-gl"
-elif [[ "$(lspci | grep -E '(Integrated Graphics Controller|Intel Corporation UHD)' -c)" -gt "0" ]]; then
-    # install_pkg "libva-intel-driver libvdpau-va-gl lib32-vulkan-intel vulkan-intel libva-intel-driver libva-utils lib32-mesa"
-    install_pkg "xf86-video-intel vulkan-radeon mesa-libgl mesa-vdpau libvdpau-va-gl"
-else
-    echo "No graphics card found!"
-fi
+case "$VGA" in
+"intel")
+    echo "Installing Intel graphics"
+    install_pkg xf86-video-intel vulkan-radeon mesa-libgl mesa-vdpau libvdpau-va-gl
+    ;;
+"amd")
+    echo "Installing AMD graphics"
+    install_pkg xf86-video-amdgpu mesa-libgl mesa-vdpau libvdpau-va-gl
+    ;;
+"nvidia")
+    echo "Installing NVIDIA graphics"
+    iinstall_pkg nvidia nvidia-utils libglvnd
+    ;;
+"virtual")
+    echo "Installing virtual"
+    install_pkg xf86-video-vmware
+    ;;
+*)
+    echo "ERROR! Unknown graphics card"
+    ;;
+esac
 
 PART_UUID=$(blkid -s UUID -o value "$PART2")
 PART_UUID=$(blkid -s PARTUUID -o value "$PART2")
@@ -168,7 +156,7 @@ case "$BOOTLOADER" in
         echo "Installing GRUB for LUKS"
         sed -i -e 's/GRUB_CMDLINE_LINUX="\(.\+\)"/GRUB_CMDLINE_LINUX="\1 cryptdevice=UUID='"${PART_UUID}"':luks"/g' -e 's/GRUB_CMDLINE_LINUX=""/GRUB_CMDLINE_LINUX="cryptdevice=UUID='"${PART_UUID}"':luks"/g' /etc/default/grub
     fi
-    if [[ "$UEFI" -eq 1 ]]; then
+    if [[ "$UEFI" -eq "1" ]]; then
         grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=ArchTitus
     else
         grub-install --target=i386-pc "$DISK"
@@ -176,7 +164,7 @@ case "$BOOTLOADER" in
     grub-mkconfig -o /boot/grub/grub.cfg
     ;;
 "systemd")
-    if [[ "$UEFI" -eq 1 ]]; then
+    if [[ "$UEFI" -eq "1" ]]; then
         echo "Installing systemd-boot"
         bootctl --path=/boot install
         case "$LAYOUT" in
@@ -201,7 +189,7 @@ case "$BOOTLOADER" in
     fi
     ;;
 "efistub")
-    if [[ "$UEFI" -eq 1 ]]; then
+    if [[ "$UEFI" -eq "1" ]]; then
         echo "Installing efistub"
         case "$LAYOUT" in
         "btrfs")
@@ -239,7 +227,7 @@ esac
 echo "Adding User and hostname"
 if [ "$(id -u)" -eq "0" ]; then
     useradd -m -G wheel -s /bin/bash "$USERNAME"
-    echo "$USERNAME:$PASSWORD" | chpasswd
+    echo "$USERNAME:$USER_PASSWORD" | chpasswd
     if [[ "$DESKTOP" != "minimal" ]]; then
         cp -R "$SCRIPT_DIR" /home/"$USERNAME"/
         chown -R "$USERNAME": /home/"$USERNAME"/asai
@@ -266,9 +254,9 @@ case "$LAYOUT" in
     ;;
 esac
 
-if [[ "$FS" =~ "btrfs" ]]; then
+if [[ "$FILE_SYSTEM" =~ "btrfs" ]]; then
         echo "Btrfs module added"
-        sed -i '/^MODULES=/s/(/(btrfs/' /etc/mkinitcpio.conf
+        sed -i "/^MODULES=/s/(/($MODULES/" /etc/mkinitcpio.conf
 fi
 
 if [[ -f "/etc/mkinitcpio.conf" ]]; then

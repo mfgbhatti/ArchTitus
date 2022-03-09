@@ -3,20 +3,18 @@
 
 SCRIPT_DIR="$HOME/asai"
 
-FUNC_FILE="$SCRIPT_DIR"/configs/shared
-CONFIG_FILE="$SCRIPT_DIR"/configs/setup.conf
+CONFIG_FILE="$SCRIPT_DIR"/configs/setup
 
-source_file() {
-    if [[ -f "$1" ]]; then
-        source "$1"
+source_setup() {
+    if [[ -f "$CONFIG_FILE" ]]; then
+        source "$CONFIG_FILE"
     else
-        echo "ERROR! Missing file: $1"
+        echo "ERROR! Missing file: $CONFIG_FILE"
         exit 0
     fi
 }
 
-source_file "$FUNC_FILE"
-source_file "$CONFIG_FILE"
+source_setup
 
 title "Installing AUR helper"
 
@@ -46,9 +44,7 @@ case "$AURHELPER" in
     echo "ERROR! Invalid AUR helper"
     ;;
 esac
-if [[ "$AURHELPER" =~ "none" ]]; then
-    echo "Skipping AUR installation"
-else
+if [[ "$AURHELPER" != "none" ]]; then
     cd "$AURHELPER" || exit 0
     makepkg -si --noconfirm
     cd "$HOME" || exit 0

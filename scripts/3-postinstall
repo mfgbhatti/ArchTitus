@@ -3,28 +3,24 @@
 
 SCRIPT_DIR="$HOME/asai"
 
-FUNC_FILE="$SCRIPT_DIR"/configs/shared
-CONFIG_FILE="$SCRIPT_DIR"/configs/setup.conf
+CONFIG_FILE="$SCRIPT_DIR"/configs/setup
 
-source_file() {
-    if [[ -f "$1" ]]; then
-        source "$1"
+source_setup() {
+    if [[ -f "$CONFIG_FILE" ]]; then
+        source "$CONFIG_FILE"
     else
-        echo "ERROR! Missing file: $1"
+        echo "ERROR! Missing file: $CONFIG_FILE"
         exit 0
     fi
 }
 
-source_file "$FUNC_FILE"
-source_file "$CONFIG_FILE"
+source_setup
 
 install_grub_theme() {
-    if [[ "$GRUBTHEME" =~ "None" ]]; then
-        echo "Skipping GRUB theme installation"
-    else
+    if [[ "$GRUBTHEME" != "None" ]]; then
         echo -e "Installing $GRUBTHEME Grub theme..."
         git clone https://github.com/ChrisTitusTech/Top-5-Bootloader-Themes "$HOME"/tmp
-        mkdir -p "$THEMEDIR"/"$GRUBTHEME"
+        mkdir -p "$THEMEDIR"/"${GRUBTHEME}"
         cp -a "$HOME"/tmp/themes/"$GRUBTHEME"/* "$THEMEDIR"/"$GRUBTHEME"
         cp -an /etc/default/grub /etc/default/grub.bak
         grep "GRUB_THEME=" /etc/default/grub >/dev/null 2>&1 && sed -i '/GRUB_THEME=/d' /etc/default/grub
@@ -48,14 +44,12 @@ EOF
 fi
 
 echo "Enabling Essential Services"
-systemctl enable cups.service
-systemctl enable cronie.service
+for SERVICE in "cups" "cronie" "ntpd" "NetworkManager" "bluetooth"; do
+    systemctl enable "$SERVICE"
+done
 ntpd -qg
-systemctl enable ntpd.service
 systemctl stop dhcpcd.service
 systemctl disable dhcpcd.service
-systemctl enable NetworkManager.service
-systemctl enable bluetooth
 
 echo "Cleaning"
 sudo_password "/etc/sudoers"

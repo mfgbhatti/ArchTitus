@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 make_boot() {
-    if [[ "$UEFI" -eq 1 ]]; then
+    if [[ "$UEFI" -eq "1" ]]; then
         mkfs.vfat -F32 -n "$BOOT" "$PART1"
     fi
 }
@@ -11,34 +11,30 @@ do_btrfs() {
     mount -t btrfs "$2" "$MOUNTPOINT"
 
     echo "Creating subvolumes and directories"
-    for x in "${SUBVOLUMES[@]}"; do
+    for x in "${BTRFS_SUBVOLUMES[@]}"; do
         btrfs subvolume create "$MOUNTPOINT"/"${x}" >/dev/null 2>&1
     done
 
     umount /mnt
     mount -o "$MOUNTOPTION",subvol=@ "$2" "$MOUNTPOINT"
 
-    for z in "${SUBVOLUMES[@]:1}"; do
+    for z in "${BTRFS_SUBVOLUMES[@]:1}"; do
         w="${z[*]//@/}"
         mkdir /mnt/"${w}"
         mount -o "$MOUNTOPTION",subvol="${z}" "$2" "$MOUNTPOINT"/"${w}"
     done
+    set_option "PACKAGES" "btrfs-progs"
 }
 
-# list of packages to install
-PACKAGES=(base linux linux-firmware archlinux-keyring sudo)
-
 do_format() {
-    echo "$FS setup"
-    case "$FS" in
+    echo "$FILE_SYSTEM setup"
+    case "$FILE_SYSTEM" in
     "xfs")
-        install_pkg xfsprogs
-        PACKAGES+=("xfsprogs")
+        set_option "PACKAGES" "xfsprogs"
         mkfs.xfs -f -L "$ROOT" "$1"
         ;;
     "btrfs")
-        install_pkg btrfs-progs
-        PACKAGES+=("btrfs-progs")
+        set_option "PACKAGES" "btrfs-progs"
         mkfs.btrfs -L "$ROOT" "$1" -f
         ;;
     "ext4")
@@ -48,8 +44,7 @@ do_format() {
         mkfs.vfat -F32 "$1"
         ;;
     "f2fs")
-        install_pkg f2fs-tools
-        PACKAGES+=("f2fs-tools")
+        set_option "PACKAGES" "f2fs-tools"
         mkfs.f2fs -l "$ROOT" -O extra_attr,inode_checksum,sb_checksum "$1"
         ;;
     "ext2")
@@ -59,18 +54,15 @@ do_format() {
         mkfs.ext3 -L "$ROOT" "$1"
         ;;
     "jfs")
-        install_pkg jfsutils
-        PACKAGES+=("jfsutils")
+        set_option "PACKAGES" "jfsutils"
         mkfs.jfs -L "$ROOT" "$1"
         ;;
     "nilfs2")
-        install_pkg nilfs-utils
-        PACKAGES+=("nilfs-utils")
+        set_option "PACKAGES" "nilfs-utils"
         mkfs.nilfs2 -L "$ROOT" "$1"
         ;;
     "ntfs")
-        install_pkg ntfs-3g
-        PACKAGES+=("ntfs-3g")
+        set_option "PACKAGES" "ntfs-3g"
         mkfs.ntfs -Q -L "$ROOT" "$1"
         ;;
     *)
@@ -104,10 +96,10 @@ mount_lvm() {
 
         i=$((i + 1))
     done
-    mount -t "$FS" /dev/"$LVM_VG"/"${LVM_NAMES[0]}" "$MOUNTPOINT"
+    mount -t "$FILE_SYSTEM" /dev/"$LVM_VG"/"${LVM_NAMES[0]}" "$MOUNTPOINT"
     for x in "${LVM_NAMES[@]:1}"; do
         mkdir "$MOUNTPOINT"/"$x"
-        mount -t "$FS" /dev/"$LVM_VG"/"$x" "$MOUNTPOINT"/"$x"
+        mount -t "$FILE_SYSTEM" /dev/"$LVM_VG"/"$x" "$MOUNTPOINT"/"$x"
     done
 }
 
@@ -170,7 +162,7 @@ case "$LAYOUT" in
     ;;
 
 "lvm")
-    PACKAGES+=("lvm2")
+    set_option "PACKAGES" "lvm2"
     do_partition
     sgdisk --typecode=2:8e00 "$DISK"
     partprobe "$DISK"
@@ -184,7 +176,7 @@ case "$LAYOUT" in
     ;;
 
 "luks")
-    PACKAGES+=("cryptsetup" "lvm2")
+    set_option "PACKAGES" "lvm2 cryptsetup"
     do_partition
     make_boot
     echo -n "$LUKS_PASSWORD" | cryptsetup -y -v luksFormat "$PART2" -
@@ -194,18 +186,14 @@ case "$LAYOUT" in
     do_lvm
     mount_lvm
     mount_boot
-    # HOOKS=(base udev autodetect modconf block filesystems keyboard fsck)
-    set_option "HOOKS" "(base udev autodetect keyboard keymap consolefont modconf block lvm2 encrypt filesystems fsck)"
     ;;
 
 "none")
     modprobe dm-mod
     vgscan &>/dev/null
     vgchange -ay &>/dev/null
-    do_format "$ROOT_PARTITION"
     mount "$ROOT_PARTITION" "$MOUNTPOINT"
     if [[ "$UEFI" -eq 1 ]]; then
-        mkfs.vfat -F32 -n "$BOOT" "$BOOT_PARTITION"
         mount_boot
     fi
     ;;

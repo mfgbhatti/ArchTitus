@@ -3,24 +3,22 @@
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
-FUNC_FILE="$SCRIPT_DIR"/configs/shared
 LOG_FILE="$SCRIPT_DIR"/configs/main.log
-CONFIG_FILE="$SCRIPT_DIR"/configs/setup.conf
+CONFIG_FILE="$SCRIPT_DIR"/configs/setup
 
 [[ -f "$LOG_FILE" ]] && rm -f "$LOG_FILE"
 
-source_file() {
-    if [[ -f "$1" ]]; then
-        source "$1"
+source_setup() {
+    if [[ -f "$CONFIG_FILE" ]]; then
+        source "$CONFIG_FILE"
     else
-        echo "ERROR! Missing file: $1"
+        echo "ERROR! Missing file: $CONFIG_FILE"
         exit 0
     fi
 }
 
 sequence() {
     clear
-    source_file "$CONFIG_FILE"
     . "$SCRIPT_DIR"/scripts/0-preinstall
     arch-chroot "$MOUNTPOINT" /root/asai/scripts/1-setup
     if [[ "$DESKTOP" != "minimal" ]]; then
@@ -35,11 +33,17 @@ sequence() {
 
 }
 
-source_file "$FUNC_FILE"
+source_setup
 background_checks
 start_jobs
 clear
 logo
 title "Scripts are in directory named asai"
-. "$SCRIPT_DIR"/scripts/startup
-sequence |& tee "$LOG_FILE"
+if [[ "$AUTO" -eq "0" ]]; then
+    . "$SCRIPT_DIR"/scripts/startup
+fi
+if [[ "$LOG" -eq "1" ]]; then
+    sequence |& tee "$LOG_FILE"
+else
+    sequence
+fi

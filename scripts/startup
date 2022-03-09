@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2207,SC2120,SC1087,SC2034
 
-[[ -f "$CONFIG_FILE" ]] && rm -f "$CONFIG_FILE" >/dev/null 2>&1
-
 do_curl() {
     _ISO=$(curl --fail https://ifconfig.co/country-iso)
     set_option "ISO" "$_ISO"
@@ -30,9 +28,9 @@ set_btrfs() {
     echo " "
     read -r -p "press enter to use default: " -a ARR
     if [[ -z "${ARR[*]}" ]]; then
-        set_option "SUBVOLUMES" "(@ @home @var @tmp @.snapshots)"
+        set_option "BTRFS_SUBVOLUMES" "(@ @home @var @tmp @.snapshots @swap)"
     else
-        NAMES=(@)
+        NAMES=(@ @swap)
         for i in "${ARR[@]}"; do
             if [[ $i =~ [@] ]]; then
                 NAMES+=("$i")
@@ -41,7 +39,7 @@ set_btrfs() {
             fi
         done
         IFS=" " read -r -a SUBS <<<"$(tr ' ' '\n' <<<"${NAMES[@]}" | awk '!x[$0]++' | tr '\n' ' ')"
-        set_option "SUBVOLUMES" "${SUBS[*]}"
+        set_option "BTRFS_SUBVOLUMES" "${SUBS[*]}"
     fi
 }
 
@@ -103,7 +101,7 @@ set_filesystem() {
     PS3="$PROMPT"
     select OPT in "${FILESYS[@]}"; do
         if elements_present "$OPT" "${FILESYS[@]}"; then
-            set_option "FS" "$OPT"
+            set_option "FILE_SYSTEM" "$OPT"
             break
         else
             invalid_option
@@ -123,7 +121,9 @@ set_partion_layout() {
             1)
                 set_btrfs
                 set_option "LAYOUT" "btrfs"
-                set_option "FS" "btrfs"
+                set_option "FILE_SYSTEM" "btrfs"
+                set_option "MODULES" "btrfs"
+
                 break
                 ;;
             2)
@@ -138,6 +138,7 @@ set_partion_layout() {
                 set_option "LUKS_PATH" "/dev/mapper/luks"
                 set_filesystem
                 set_password "LUKS_PASSWORD"
+                set_option "HOOKS" "(base udev autodetect keyboard keymap consolefont modconf block lvm2 encrypt filesystems fsck)"
                 break
                 ;;
             4)
@@ -163,7 +164,6 @@ set_partion_layout() {
                     fi
                 done
                 break
-                set_filesystem
                 ;;
             *)
                 invalid_option
@@ -279,7 +279,7 @@ user_info() {
             continue
         fi
     done
-    set_password "PASSWORD"
+    set_password "USER_PASSWORD"
     while true; do
         read -r -p "Please enter your hostname [default is archlinux]: " HOSTNAME
         if [[ -z "$HOSTNAME" ]]; then
@@ -303,10 +303,10 @@ set_locale() {
                 x=2
                 while [[ "$x" -lt "6" ]]; do
                     if [[ "$LOCALE" == "Load $x List" ]]; then
-                        NAME="LOCALES$x[@]"     # SC1087
+                        NAME="LOCALES$x[@]" # SC1087
                         select_locale "${!NAME}"
                     fi
-                    x=$((x+1))
+                    x=$((x + 1))
                 done
                 set_option "LOCALE" "\"${LOCALE}.UTF-8 UTF-8\""
                 break
@@ -409,7 +409,7 @@ run_tasks() {
     do_curl
     efi_check
     hardware_check
-    write_to_config
+    smart_checks
 }
 
 make_choice() {
