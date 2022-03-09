@@ -205,10 +205,10 @@ case "$LAYOUT" in
 esac
 
 if mount_check; then
-    echo -ne "ERROR! Not mounted\n"
-    exit 0
-else
     echo -ne "Mounting rechecked\n"
+else
+    echo -ne "ERROR! $MOUNTPOINT not mounted\n"
+    exit 0
 fi
 
 echo "Starting pacstrap"
