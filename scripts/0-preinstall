@@ -92,7 +92,7 @@ mount_lvm() {
     i=0
     while [[ "$i" -le "$LVM_PART_NUM" ]]; do
         lvchange -ay /dev/"$LVM_VG"/"${LVM_NAMES[$i]}" >/dev/null 2>&1
-        do_format /dev/"$LVM_VG"/"${LVM_NAMES[$i]}" 
+        do_format /dev/"$LVM_VG"/"${LVM_NAMES[$i]}"
 
         i=$((i + 1))
     done
