@@ -172,7 +172,6 @@ case "$LAYOUT" in
     do_lvm
     mount_lvm
     mount_boot
-    set_option "HOOKS" "(lvm2 filesystems)"
     ;;
 
 "luks")
@@ -180,9 +179,9 @@ case "$LAYOUT" in
     do_partition
     make_boot
     echo -n "$LUKS_PASSWORD" | cryptsetup -y -v luksFormat "$PART2" -
-    echo -n "$LUKS_PASSWORD" | cryptsetup open "$PART2" luks -
-    pvcreate "$LUKS_PATH"
-    vgcreate "$LVM_VG" "$LUKS_PATH"
+    echo -n "$LUKS_PASSWORD" | cryptsetup open "$PART2" "$LUKS_PATH" -
+    pvcreate /dev/mapper/"$LUKS_PATH"
+    vgcreate "$LVM_VG" /dev/mapper/"$LUKS_PATH"
     do_lvm
     mount_lvm
     mount_boot

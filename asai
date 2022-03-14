@@ -42,8 +42,4 @@ title "Scripts are in directory named asai"
 if [[ "$AUTO" -eq "0" ]]; then
     . "$SCRIPT_DIR"/scripts/startup
 fi
-if [[ "$LOG" -eq "1" ]]; then
-    sequence |& tee "$LOG_FILE"
-else
-    sequence
-fi
+sequence |& tee "$LOG_FILE"

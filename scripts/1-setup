@@ -29,21 +29,18 @@ install_services() {
 }
 
 if [[ $TOTALMEM -gt 8000000 ]]; then
-    echo "Changing makepkg.conf for $CPU cores"
-    sed -i "s/#MAKEFLAGS=\"-j2\"/MAKEFLAGS=\"-j$CPU\"/g" /etc/makepkg.conf
-    sed -i "s/COMPRESSXZ=(xz -c -z -)/COMPRESSXZ=(xz -c -T $CPU -z -)/g" /etc/makepkg.conf
+    echo "Changing makepkg.conf for $CPU_CORES cores"
+    sed -i "s/#MAKEFLAGS=\"-j2\"/MAKEFLAGS=\"-j$CPU_CORES\"/g" /etc/makepkg.conf
+    sed -i "s/COMPRESSXZ=(xz -c -z -)/COMPRESSXZ=(xz -c -T $CPU_CORES -z -)/g" /etc/makepkg.conf
 fi
 
 echo "Setup Language and set locale"
-LOCALE="${LOCALE//\"/}"
-echo "$LOCALE" >>/etc/locale.gen
-
 hwclock --systohc
-
+sed -i '/'"${LOCALE}"'/s/^#//' /etc/locale.gen
 locale-gen
 timedatectl --no-ask-password set-timezone "$TIMEZONE"
 timedatectl --no-ask-password set-ntp 1
-localectl --no-ask-password set-locale LANG="${LOCALE%%[[:space:]]*}" LC_TIME="${LOCALE%%[[:space:]]*}"
+localectl --no-ask-password set-locale LANG="${LOCALE}.UTF-8" LC_TIME="${LOCALE}.UTF-8"
 localectl --no-ask-password set-keymap --no-convert "$KEYMAP"
 
 sudo_no_password "/etc/sudoers"
