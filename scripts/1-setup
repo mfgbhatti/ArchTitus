@@ -177,16 +177,16 @@ case "$BOOTLOADER" in
         bootctl --path=/boot install
         case "$LAYOUT" in
         "btrfs")
-            echo -e "title\tArchLinux\nlinux\t/vmlinuz-linux\ninitrd\t/initramfs-linux.img\ninitrd\t/$PROCESSOR-ucode.img\noptions\troot=PARTUUID=$PARTITION_PARTUUID rw rootflags=subvol=@" >/boot/loader/entries/arch.conf
+            echo -e "title\tArchLinux\nlinux\t/vmlinuz-linux$KERNEL_POSTFIX\ninitrd\t/initramfs-linux$KERNEL_POSTFIX.img\ninitrd\t/$PROCESSOR-ucode.img\noptions\troot=PARTUUID=$PARTITION_PARTUUID rw rootflags=subvol=@" >/boot/loader/entries/arch.conf
             ;;
         "lvm")
-            echo -e "title\tArchLinux\nlinux\t/vmlinuz-linux\ninitrd\t/initramfs-linux.img\ninitrd\t/$PROCESSOR-ucode.img\noptions\troot=/dev/$LVM_VG/${LVM_NAMES[0]} rw" >/boot/loader/entries/arch.conf
+            echo -e "title\tArchLinux\nlinux\t/vmlinuz-linux$KERNEL_POSTFIX\ninitrd\t/initramfs-linux$KERNEL_POSTFIX.img\ninitrd\t/$PROCESSOR-ucode.img\noptions\troot=/dev/$LVM_VG/${LVM_NAMES[0]} rw" >/boot/loader/entries/arch.conf
             ;;
         "luks")
-            echo -e "title\tArchLinux\nlinux\t/vmlinuz-linux\ninitrd\t/initramfs-linux.img\ninitrd\t/$PROCESSOR-ucode.img\noptions\tcryptdevice=UUID=$PARTITION_UUID:luks root=/dev/$LVM_VG/${LVM_NAMES[0]} rw" >/boot/loader/entries/arch.conf
+            echo -e "title\tArchLinux\nlinux\t/vmlinuz-linux$KERNEL_POSTFIX\ninitrd\t/initramfs-linux$KERNEL_POSTFIX.img\ninitrd\t/$PROCESSOR-ucode.img\noptions\tcryptdevice=UUID=$PARTITION_UUID:luks root=/dev/$LVM_VG/${LVM_NAMES[0]} rw" >/boot/loader/entries/arch.conf
             ;;
         "none")
-            echo -e "title\tArchLinux\nlinux\t/vmlinuz-linux\ninitrd\t/initramfs-linux.img\ninitrd\t/$PROCESSOR-ucode.img\noptions\troot=PARTUUID=$PARTITION_PARTUUID rw" >/boot/loader/entries/arch.conf
+            echo -e "title\tArchLinux\nlinux\t/vmlinuz-linux$KERNEL_POSTFIX\ninitrd\t/initramfs-linux$KERNEL_POSTFIX.img\ninitrd\t/$PROCESSOR-ucode.img\noptions\troot=PARTUUID=$PARTITION_PARTUUID rw" >/boot/loader/entries/arch.conf
             ;;
         *)
             echo "ERROR! Systemd-boot is not supported for BIOS systems"
@@ -201,20 +201,20 @@ case "$BOOTLOADER" in
         echo "Installing efistub"
         case "$LAYOUT" in
         "btrfs")
-            efibootmgr --disk "$DISK" --part 1 --create --label "ArchLinux-Fallback" --loader "/vmlinuz-linux" --unicode "root=PARTUUID=$PARTITION_PARTUUID rw rootflags=subvol=@ initrd=\\$PROCESSOR-ucode.img initrd=\initramfs-linux-fallback.img"
-            efibootmgr --disk "$DISK" --part 1 --create --label "ArchLinux" --loader "/vmlinuz-linux" --unicode "root=PARTUUID=$PARTITION_PARTUUID rw rootflags=subvol=@ initrd=\\$PROCESSOR-ucode.img initrd=\initramfs-linux.img"
+            efibootmgr --disk "$DISK" --part 1 --create --label "ArchLinux-Fallback" --loader "/vmlinuz-linux$KERNEL_POSTFIX" --unicode "root=PARTUUID=$PARTITION_PARTUUID rw rootflags=subvol=@ initrd=\\$PROCESSOR-ucode.img initrd=\initramfs-linux$KERNEL_POSTFIX-fallback.img"
+            efibootmgr --disk "$DISK" --part 1 --create --label "ArchLinux" --loader "/vmlinuz-linux$KERNEL_POSTFIX" --unicode "root=PARTUUID=$PARTITION_PARTUUID rw rootflags=subvol=@ initrd=\\$PROCESSOR-ucode.img initrd=\initramfs-linux$KERNEL_POSTFIX.img"
             ;;
         "lvm")
-            efibootmgr --disk "$DISK" --part 1 --create --label "ArchLinux-Fallback" --loader "/vmlinuz-linux" --unicode "root=/dev/$LVM_VG/${LVM_NAMES[0]} rw initrd=\\$PROCESSOR-ucode.img initrd=\initramfs-linux-fallback.img"
-            efibootmgr --disk "$DISK" --part 1 --create --label "ArchLinux" --loader "/vmlinuz-linux" --unicode "root=/dev/$LVM_VG/${LVM_NAMES[0]} rw initrd=\\$PROCESSOR-ucode.img initrd=\initramfs-linux.img"
+            efibootmgr --disk "$DISK" --part 1 --create --label "ArchLinux-Fallback" --loader "/vmlinuz-linux$KERNEL_POSTFIX" --unicode "root=/dev/$LVM_VG/${LVM_NAMES[0]} rw initrd=\\$PROCESSOR-ucode.img initrd=\initramfs-linux$KERNEL_POSTFIX-fallback.img"
+            efibootmgr --disk "$DISK" --part 1 --create --label "ArchLinux" --loader "/vmlinuz-linux$KERNEL_POSTFIX" --unicode "root=/dev/$LVM_VG/${LVM_NAMES[0]} rw initrd=\\$PROCESSOR-ucode.img initrd=\initramfs-linux$KERNEL_POSTFIX.img"
             ;;
         "luks")
-            efibootmgr --disk "$DISK" --part 1 --create --label "ArchLinux-Fallback" --loader "/vmlinuz-linux" --unicode "cryptdevice=PARTUUID=$PARTITION_PARTUUID:luks:allow-discards root=/dev/$LVM_VG/${LVM_NAMES[0]} rw initrd=\\$PROCESSOR-ucode.img initrd=\initramfs-linux-fallback.img"
-            efibootmgr --disk "$DISK" --part 1 --create --label "ArchLinux" --loader "/vmlinuz-linux" --unicode "cryptdevice=PARTUUID=$PARTITION_PARTUUID:luks:allow-discards root=/dev/$LVM_VG/${LVM_NAMES[0]} rw initrd=\\$PROCESSOR-ucode.img initrd=\initramfs-linux.img"
+            efibootmgr --disk "$DISK" --part 1 --create --label "ArchLinux-Fallback" --loader "/vmlinuz-linux$KERNEL_POSTFIX" --unicode "cryptdevice=PARTUUID=$PARTITION_PARTUUID:luks:allow-discards root=/dev/$LVM_VG/${LVM_NAMES[0]} rw initrd=\\$PROCESSOR-ucode.img initrd=\initramfs-linux$KERNEL_POSTFIX-fallback.img"
+            efibootmgr --disk "$DISK" --part 1 --create --label "ArchLinux" --loader "/vmlinuz-linux$KERNEL_POSTFIX" --unicode "cryptdevice=PARTUUID=$PARTITION_PARTUUID:luks:allow-discards root=/dev/$LVM_VG/${LVM_NAMES[0]} rw initrd=\\$PROCESSOR-ucode.img initrd=\initramfs-linux$KERNEL_POSTFIX.img"
             ;;
         "none")
-            efibootmgr --disk "$DISK" --part 1 --create --label "ArchLinux-Fallback" --loader "/vmlinuz-linux" --unicode "root=PARTUUID=$PARTITION_PARTUUID rw initrd=\\$PROCESSOR-ucode.img initrd=\initramfs-linux-fallback.img"
-            efibootmgr --disk "$DISK" --part 1 --create --label "ArchLinux" --loader "/vmlinuz-linux" --unicode "root=PARTUUID=$PARTITION_PARTUUID rw initrd=\\$PROCESSOR-ucode.img initrd=\initramfs-linux.img"
+            efibootmgr --disk "$DISK" --part 1 --create --label "ArchLinux-Fallback" --loader "/vmlinuz-linux$KERNEL_POSTFIX" --unicode "root=PARTUUID=$PARTITION_PARTUUID rw initrd=\\$PROCESSOR-ucode.img initrd=\initramfs-linux$KERNEL_POSTFIX-fallback.img"
+            efibootmgr --disk "$DISK" --part 1 --create --label "ArchLinux" --loader "/vmlinuz-linux$KERNEL_POSTFIX" --unicode "root=PARTUUID=$PARTITION_PARTUUID rw initrd=\\$PROCESSOR-ucode.img initrd=\initramfs-linux$KERNEL_POSTFIX.img"
             ;;
         *)
             echo "ERROR! efistub is not supported for BIOS systems"
