@@ -55,50 +55,50 @@ fi
 case "$DESKTOP" in
 "kde")
     install_pkg plasma kf5 sddm plasma-wayland-session
-    systemctl enable sddm.service
+    set_option "SERVICES" "sddm"
     ;;
 "gnome")
     install_pkg gnome gnome-extra gnome-software gnome-initial-setup gnome-tweak-tool gnome-power-manager
-    systemctl enable gdm.service
+    set_option "SERVICES" "gdm"
     ;;
 "xfce")
     install_pkg xfce4 xfce4-goodies lightdm lightdm-gtk-greeter pavucontrol pulseaudio
-    systemctl enable lightdm.service
+    set_option "SERVICES" "lightdm"
     ;;
 "mate")
     install_pkg mate mate-extra lightdm lightdm-gtk-greeter
-    systemctl enable lightdm.service
+    set_option "SERVICES" "lightdm"
     ;;
 "lxqt")
     install_pkg lxqt breeze-icons sddm
-    systemctl enable sddm.service
+    set_option "SERVICES" "sddm"
     ;;
 "openbox")
     install_pkg openbox obconf xterm lightdm lightdm-gtk-greeter
-    systemctl enable lightdm.service
+    set_option "SERVICES" "lightdm"
     ;;
 "awesome")
     install_pkg awesome vicious xterm lightdm lightdm-gtk-greeter
-    systemctl enable lightdm.service
+    set_option "SERVICES" "lightdm"
     ;;
 "minimal")
     ;;
 "i3")
     install_pkg i3-wm i3blocks i3lock i3status dmenu rxvt-unicode lightdm lightdm-gtk-greeter
-    systemctl enable lightdm.service
+    set_option "SERVICES" "lightdm"
     ;;
 "i3-gaps")
     install_pkg i3-gaps i3blocks i3lock i3status dmenu rxvt-unicode lightdm lightdm-gtk-greeter
-    systemctl enable lightdm.service
+    set_option "SERVICES" "lightdm"
     ;;
 "deepin")
     install_pkg deepin deepin-extra deepin-kwin
     sed -i 's/^#greeter-session=.*/greeter-session=lightdm-deepin-greeter/' /etc/lightdm/lightdm.conf
-    systemctl enable lightdm.service
+    set_option "SERVICES" "lightdm"
     ;;
 "budgie")
     install_pkg budgie-desktop budgie-desktop-view budgie-screensaver gnome-control-center network-manager-applet gnome
-    systemctl enable gdm.service
+    set_option "SERVICES" "gdm"
     ;;
 *)
     echo "Unsupported desktop environment"
@@ -133,17 +133,25 @@ case "$VGA" in
     echo "Installing NVIDIA graphics"
     iinstall_pkg nvidia nvidia-utils libglvnd
     ;;
-"virtual")
-    echo "Installing virtual"
-    install_pkg xf86-video-vmware
+"oracle")
+    echo "Installing for virtualbox"
+    install_pkg xf86-video-vmware virtualbox-guest-utils mesa-libgl
+    ;;
+"vmware")
+    echo "Installing for vmware"
+    install_pkg xf86-video-vmware open-vm-tools
+    ;;
+"kvm")
+    echo "Installing for kvm"
+    install_pkg qemu-guest-agent
     ;;
 *)
     echo "ERROR! Unknown graphics card"
     ;;
 esac
 
-PART_UUID=$(blkid -s UUID -o value "$PART2")
-PART_UUID=$(blkid -s PARTUUID -o value "$PART2")
+PARTITION_UUID=$(blkid -s UUID -o value "$PART2")
+PARTITION_PARTUUID=$(blkid -s PARTUUID -o value "$PART2")
 
 case "$BOOTLOADER" in
 "grub")
@@ -151,10 +159,10 @@ case "$BOOTLOADER" in
     install_pkg grub os-prober
     if [[ "$LAYOUT" =~ "luks" ]]; then
         echo "Installing GRUB for LUKS"
-        sed -i -e 's/GRUB_CMDLINE_LINUX="\(.\+\)"/GRUB_CMDLINE_LINUX="\1 cryptdevice=UUID='"${PART_UUID}"':luks"/g' -e 's/GRUB_CMDLINE_LINUX=""/GRUB_CMDLINE_LINUX="cryptdevice=UUID='"${PART_UUID}"':luks"/g' /etc/default/grub
+        sed -i -e 's/GRUB_CMDLINE_LINUX="\(.\+\)"/GRUB_CMDLINE_LINUX="\1 cryptdevice=UUID='"${PARTITION_UUID}"':luks"/g' -e 's/GRUB_CMDLINE_LINUX=""/GRUB_CMDLINE_LINUX="cryptdevice=UUID='"${PARTITION_UUID}"':luks"/g' /etc/default/grub
     fi
     if [[ "$UEFI" -eq "1" ]]; then
-        grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=ArchTitus
+        grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=ArchLinux
     else
         grub-install --target=i386-pc "$DISK"
     fi
@@ -166,16 +174,16 @@ case "$BOOTLOADER" in
         bootctl --path=/boot install
         case "$LAYOUT" in
         "btrfs")
-            echo -e "title\tArchTitus\nlinux\t/vmlinuz-linux\ninitrd\t/initramfs-linux.img\ninitrd\t/$IMG\noptions\troot=PARTUUID=$PART_UUID rw rootflags=subvol=@" >/boot/loader/entries/arch.conf
+            echo -e "title\tArchLinux\nlinux\t/vmlinuz-linux\ninitrd\t/initramfs-linux.img\ninitrd\t/$PROCESSOR-ucode.img\noptions\troot=PARTUUID=$PARTITION_PARTUUID rw rootflags=subvol=@" >/boot/loader/entries/arch.conf
             ;;
         "lvm")
-            echo -e "title\tArchTitus\nlinux\t/vmlinuz-linux\ninitrd\t/initramfs-linux.img\ninitrd\t/$IMG\noptions\troot=/dev/$LVM_VG/${LVM_NAMES[0]} rw" >/boot/loader/entries/arch.conf
+            echo -e "title\tArchLinux\nlinux\t/vmlinuz-linux\ninitrd\t/initramfs-linux.img\ninitrd\t/$PROCESSOR-ucode.img\noptions\troot=/dev/$LVM_VG/${LVM_NAMES[0]} rw" >/boot/loader/entries/arch.conf
             ;;
         "luks")
-            echo -e "title\tArchTitus\nlinux\t/vmlinuz-linux\ninitrd\t/initramfs-linux.img\ninitrd\t/$IMG\noptions\tcryptdevice=UUID=$PART_UUID:luks root=/dev/$LVM_VG/${LVM_NAMES[0]} rw" >/boot/loader/entries/arch.conf
+            echo -e "title\tArchLinux\nlinux\t/vmlinuz-linux\ninitrd\t/initramfs-linux.img\ninitrd\t/$PROCESSOR-ucode.img\noptions\tcryptdevice=UUID=$PARTITION_UUID:luks root=/dev/$LVM_VG/${LVM_NAMES[0]} rw" >/boot/loader/entries/arch.conf
             ;;
         "none")
-            echo -e "title\tArchTitus\nlinux\t/vmlinuz-linux\ninitrd\t/initramfs-linux.img\ninitrd\t/$IMG\noptions\troot=PARTUUID=$PART_UUID rw" >/boot/loader/entries/arch.conf
+            echo -e "title\tArchLinux\nlinux\t/vmlinuz-linux\ninitrd\t/initramfs-linux.img\ninitrd\t/$PROCESSOR-ucode.img\noptions\troot=PARTUUID=$PARTITION_PARTUUID rw" >/boot/loader/entries/arch.conf
             ;;
         *)
             echo "ERROR! Systemd-boot is not supported for BIOS systems"
@@ -190,20 +198,20 @@ case "$BOOTLOADER" in
         echo "Installing efistub"
         case "$LAYOUT" in
         "btrfs")
-            efibootmgr --disk "$DISK" --part 1 --create --label "ArchTitus-Fallback" --loader "/vmlinuz-linux" --unicode "root=PARTUUID=$PART_UUID rw rootflags=subvol=@ initrd=\\$IMG initrd=\initramfs-linux-fallback.img"
-            efibootmgr --disk "$DISK" --part 1 --create --label "ArchTitus" --loader "/vmlinuz-linux" --unicode "root=PARTUUID=$PART_UUID rw rootflags=subvol=@ initrd=\\$IMG initrd=\initramfs-linux.img"
+            efibootmgr --disk "$DISK" --part 1 --create --label "ArchLinux-Fallback" --loader "/vmlinuz-linux" --unicode "root=PARTUUID=$PARTITION_PARTUUID rw rootflags=subvol=@ initrd=\\$PROCESSOR-ucode.img initrd=\initramfs-linux-fallback.img"
+            efibootmgr --disk "$DISK" --part 1 --create --label "ArchLinux" --loader "/vmlinuz-linux" --unicode "root=PARTUUID=$PARTITION_PARTUUID rw rootflags=subvol=@ initrd=\\$PROCESSOR-ucode.img initrd=\initramfs-linux.img"
             ;;
         "lvm")
-            efibootmgr --disk "$DISK" --part 1 --create --label "ArchTitus-Fallback" --loader "/vmlinuz-linux" --unicode "root=/dev/$LVM_VG/${LVM_NAMES[0]} rw initrd=\\$IMG initrd=\initramfs-linux-fallback.img"
-            efibootmgr --disk "$DISK" --part 1 --create --label "ArchTitus" --loader "/vmlinuz-linux" --unicode "root=/dev/$LVM_VG/${LVM_NAMES[0]} rw initrd=\\$IMG initrd=\initramfs-linux.img"
+            efibootmgr --disk "$DISK" --part 1 --create --label "ArchLinux-Fallback" --loader "/vmlinuz-linux" --unicode "root=/dev/$LVM_VG/${LVM_NAMES[0]} rw initrd=\\$PROCESSOR-ucode.img initrd=\initramfs-linux-fallback.img"
+            efibootmgr --disk "$DISK" --part 1 --create --label "ArchLinux" --loader "/vmlinuz-linux" --unicode "root=/dev/$LVM_VG/${LVM_NAMES[0]} rw initrd=\\$PROCESSOR-ucode.img initrd=\initramfs-linux.img"
             ;;
         "luks")
-            efibootmgr --disk "$DISK" --part 1 --create --label "ArchTitus-Fallback" --loader "/vmlinuz-linux" --unicode "cryptdevice=PARTUUID=$PART_UUID:luks:allow-discards root=/dev/$LVM_VG/${LVM_NAMES[0]} rw initrd=\\$IMG initrd=\initramfs-linux-fallback.img"
-            efibootmgr --disk "$DISK" --part 1 --create --label "ArchTitus" --loader "/vmlinuz-linux" --unicode "cryptdevice=PARTUUID=$PART_UUID:luks:allow-discards root=/dev/$LVM_VG/${LVM_NAMES[0]} rw initrd=\\$IMG initrd=\initramfs-linux.img"
+            efibootmgr --disk "$DISK" --part 1 --create --label "ArchLinux-Fallback" --loader "/vmlinuz-linux" --unicode "cryptdevice=PARTUUID=$PARTITION_PARTUUID:luks:allow-discards root=/dev/$LVM_VG/${LVM_NAMES[0]} rw initrd=\\$PROCESSOR-ucode.img initrd=\initramfs-linux-fallback.img"
+            efibootmgr --disk "$DISK" --part 1 --create --label "ArchLinux" --loader "/vmlinuz-linux" --unicode "cryptdevice=PARTUUID=$PARTITION_PARTUUID:luks:allow-discards root=/dev/$LVM_VG/${LVM_NAMES[0]} rw initrd=\\$PROCESSOR-ucode.img initrd=\initramfs-linux.img"
             ;;
         "none")
-            efibootmgr --disk "$DISK" --part 1 --create --label "ArchTitus-Fallback" --loader "/vmlinuz-linux" --unicode "root=PARTUUID=$PART_UUID rw initrd=\\$IMG initrd=\initramfs-linux-fallback.img"
-            efibootmgr --disk "$DISK" --part 1 --create --label "ArchTitus" --loader "/vmlinuz-linux" --unicode "root=PARTUUID=$PART_UUID rw initrd=\\$IMG initrd=\initramfs-linux.img"
+            efibootmgr --disk "$DISK" --part 1 --create --label "ArchLinux-Fallback" --loader "/vmlinuz-linux" --unicode "root=PARTUUID=$PARTITION_PARTUUID rw initrd=\\$PROCESSOR-ucode.img initrd=\initramfs-linux-fallback.img"
+            efibootmgr --disk "$DISK" --part 1 --create --label "ArchLinux" --loader "/vmlinuz-linux" --unicode "root=PARTUUID=$PARTITION_PARTUUID rw initrd=\\$PROCESSOR-ucode.img initrd=\initramfs-linux.img"
             ;;
         *)
             echo "ERROR! efistub is not supported for BIOS systems"
