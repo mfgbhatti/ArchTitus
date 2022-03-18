@@ -39,7 +39,7 @@ start_jobs
 clear
 logo
 title "Scripts are in directory named asai"
-if [[ "$AUTO" -eq "0" ]]; then
+if [[ "$AUTO" -eq "1" ]]; then
     . "$SCRIPT_DIR"/scripts/startup
 fi
 sequence |& tee "$LOG_FILE"
