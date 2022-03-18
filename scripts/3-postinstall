@@ -19,7 +19,7 @@ source_setup
 install_grub_theme() {
     if [[ "$GRUBTHEME" != "None" ]]; then
         echo -e "Installing $GRUBTHEME Grub theme..."
-        git clone https://github.com/ChrisTitusTech/Top-5-Bootloader-Themes "$HOME"/tmp
+        git clone https://github.com/mfgbhatti/grub-themes "$HOME"/tmp
         mkdir -p "$THEMEDIR"/"${GRUBTHEME}"
         cp -a "$HOME"/tmp/themes/"$GRUBTHEME"/* "$THEMEDIR"/"$GRUBTHEME"
         cp -an /etc/default/grub /etc/default/grub.bak
@@ -44,8 +44,8 @@ EOF
 fi
 
 echo "Enabling Essential Services"
-for SERVICE in "cups" "cronie" "ntpd" "NetworkManager" "bluetooth"; do
-    systemctl enable "$SERVICE"
+for i in "${SERVICES[@]}"; do
+    systemctl enable "$i".service
 done
 ntpd -qg
 systemctl stop dhcpcd.service
