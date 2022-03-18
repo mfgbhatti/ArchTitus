@@ -19,6 +19,7 @@ source_setup() {
 
 sequence() {
     clear
+    source_setup
     . "$SCRIPT_DIR"/scripts/0-preinstall
     arch-chroot "$MOUNTPOINT" /root/asai/scripts/1-setup
     if [[ "$DESKTOP" != "minimal" ]]; then

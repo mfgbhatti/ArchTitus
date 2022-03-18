@@ -286,7 +286,7 @@ set_kernel() {
     select KERNEL in "${SELECTION[@]}"; do
         if elements_present "$KERNEL" "${SELECTION[@]}"; then
             if [[ "$KERNEL" != "linux" ]]; then
-            set_option "PACKAGES" "KERNEL"
+            set_option "PACKAGES" "$KERNEL"
             POSTFIX=$(echo "$KERNEL" | awk 'BEGIN { FS="-" }; {print "-"$2}')
             set_option "KERNEL_POSTFIX" "$POSTFIX"
             else

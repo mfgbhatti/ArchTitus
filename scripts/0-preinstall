@@ -121,6 +121,13 @@ do_partition() {
         sgdisk -n 2::-0 --typecode=2:8300 --change-name=2:"$ROOT" "$DISK"
 
     fi
+    if [[ "$SDD" -eq "1" ]]; then
+        set_option "BOOT_PARTITION" "${DISK}p1"
+        set_option "ROOT_PARTITION" "${DISK}p2"
+    else
+        set_option "BOOT_PARTITION" "${DISK}1"
+        set_option "ROOT_PARTITION" "${DISK}2"
+    fi
 }
 
 mount_boot() {
@@ -134,7 +141,7 @@ mount_boot() {
 title "Preinstall setup"
 install_pkg pacman-contrib reflector rsync gptfdisk
 echo "Modifying pacman.conf"
-sed -i 's/^#ParallelDownloads/ParallelDownloads/' /etc/pacman.conf
+sed -i  '/ParallelDownloads/s/^#//;/Color/s/^#//' /etc/pacman.conf
 
 if [[ ! -f /etc/pacman.d/mirrorlist.backup ]]; then
     cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.backup
@@ -142,14 +149,6 @@ fi
 echo "Generating new mirrorlist"
 reflector --age 48 --country "$ISO" -f 5 --latest 20 --protocol https --sort rate --save /etc/pacman.d/mirrorlist
 mkdir "$MOUNTPOINT" &>/dev/null
-
-if [[ "$SDD" -eq "1" ]]; then
-    set_option "BOOT_PARTITION" "${DISK}p1"
-    set_option "ROOT_PARTITION" "${DISK}p2"
-else
-    set_option "BOOT_PARTITION" "${DISK}1"
-    set_option "ROOT_PARTITION" "${DISK}2"
-fi
 
 case "$LAYOUT" in
 "btrfs")
