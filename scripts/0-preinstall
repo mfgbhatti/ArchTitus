@@ -2,7 +2,7 @@
 
 make_boot() {
     if [[ "$UEFI" -eq "1" ]]; then
-        mkfs.vfat -F32 -n "$BOOT" "$PART1"
+        mkfs.vfat -F32 -n "$BOOT" "$BOOT_PARTITION"
     fi
 }
 
@@ -127,7 +127,7 @@ mount_boot() {
     if [[ "$UEFI" -eq "1" ]]; then
         echo "Mounting boot partition"
         mkdir "$MOUNTPOINT"/boot
-        mount -t vfat -L EFIBOOT "$MOUNTPOINT"/boot/
+        mount -t vfat "$BOOT_PARTITION" "$MOUNTPOINT"/boot/
     fi
 }
 
@@ -144,20 +144,18 @@ reflector --age 48 --country "$ISO" -f 5 --latest 20 --protocol https --sort rat
 mkdir "$MOUNTPOINT" &>/dev/null
 
 if [[ "$SDD" -eq "1" ]]; then
-    PART1=${DISK}p1
-    PART2=${DISK}p2
+    set_option "BOOT_PARTITION" "${DISK}p1"
+    set_option "ROOT_PARTITION" "${DISK}p2"
 else
-    PART1=${DISK}1
-    PART2=${DISK}2
+    set_option "BOOT_PARTITION" "${DISK}1"
+    set_option "ROOT_PARTITION" "${DISK}2"
 fi
-
-set_option "PART2" "$PART2"
 
 case "$LAYOUT" in
 "btrfs")
     do_partition
     make_boot
-    do_btrfs "$ROOT" "$PART2"
+    do_btrfs "$ROOT" "$ROOT_PARTITION"
     mount_boot
     ;;
 
@@ -167,8 +165,8 @@ case "$LAYOUT" in
     sgdisk --typecode=2:8e00 "$DISK"
     partprobe "$DISK"
     make_boot
-    pvcreate "$PART2"
-    vgcreate "$LVM_VG" "$PART2"
+    pvcreate "$ROOT_PARTITION"
+    vgcreate "$LVM_VG" "$ROOT_PARTITION"
     do_lvm
     mount_lvm
     mount_boot
@@ -178,8 +176,8 @@ case "$LAYOUT" in
     set_option "PACKAGES" "lvm2 cryptsetup"
     do_partition
     make_boot
-    echo -n "$LUKS_PASSWORD" | cryptsetup -y -v luksFormat "$PART2" -
-    echo -n "$LUKS_PASSWORD" | cryptsetup open "$PART2" "$LUKS_PATH" -
+    echo -n "$LUKS_PASSWORD" | cryptsetup -y -v luksFormat "$ROOT_PARTITION" -
+    echo -n "$LUKS_PASSWORD" | cryptsetup open "$ROOT_PARTITION" "$LUKS_PATH" -
     pvcreate /dev/mapper/"$LUKS_PATH"
     vgcreate "$LVM_VG" /dev/mapper/"$LUKS_PATH"
     do_lvm
