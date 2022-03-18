@@ -279,6 +279,28 @@ set_desktop() {
 
 }
 
+set_kernel() {
+    title "Choose your preferred kernel"
+    SELECTION=("linux" "linux-lts" "linux-zen" "linux-hardened")
+    PS3="$PROMPT"
+    select KERNEL in "${SELECTION[@]}"; do
+        if elements_present "$KERNEL" "${SELECTION[@]}"; then
+            if [[ "$KERNEL" != "linux" ]]; then
+            set_option "PACKAGES" "KERNEL"
+            POSTFIX=$(echo "$KERNEL" | awk 'BEGIN { FS="-" }; {print "-"$2}')
+            set_option "KERNEL_POSTFIX" "$POSTFIX"
+            else
+                set_option "PACKAGES" "linux"
+            fi
+            break
+        else
+            invalid_option
+            set_kernel
+            break
+        fi
+    done
+}
+
 set_grub_theme() {
     title "Choose your preferred GRUB theme"
     SELECTION=("CyberRe" "Cyberpunk" "Shodan" "Vimix" "Xenlism" "None")
@@ -335,13 +357,15 @@ make_choice() {
     logo
     set_locale
     disk_selection
-    logo
     # Advance options
+    logo
     set_partion_layout
     logo
+    set_kernel
     set_desktop
+    logo
     set_bootloader
 }
 
 make_choice
-# disk_selection
+# set_kernel
