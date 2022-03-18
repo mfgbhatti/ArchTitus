@@ -81,8 +81,8 @@ case "$DESKTOP" in
     install_pkg awesome vicious xterm lightdm lightdm-gtk-greeter
     set_option "SERVICES" "lightdm"
     ;;
-"minimal")
-    ;;
+"minimal") ;;
+
 "i3")
     install_pkg i3-wm i3blocks i3lock i3status dmenu rxvt-unicode lightdm lightdm-gtk-greeter
     set_option "SERVICES" "lightdm"
@@ -131,27 +131,30 @@ case "$VGA" in
     ;;
 "nvidia")
     echo "Installing NVIDIA graphics"
-    iinstall_pkg nvidia nvidia-utils libglvnd
+    install_pkg nvidia nvidia-utils libglvnd
     ;;
 "oracle")
     echo "Installing for virtualbox"
     install_pkg xf86-video-vmware virtualbox-guest-utils mesa-libgl
+    set_option "SERVICES" "vboxservice"
     ;;
 "vmware")
     echo "Installing for vmware"
     install_pkg xf86-video-vmware open-vm-tools
+    set_option "SERVICES" "vmware-vmblock-fuse vmtoolsd"
     ;;
 "kvm")
     echo "Installing for kvm"
     install_pkg qemu-guest-agent
+    set_option "SERVICES" "qemu-guest-agent"
     ;;
 *)
     echo "ERROR! Unknown graphics card"
     ;;
 esac
 
-PARTITION_UUID=$(blkid -s UUID -o value "$PART2")
-PARTITION_PARTUUID=$(blkid -s PARTUUID -o value "$PART2")
+PARTITION_UUID=$(blkid -s UUID -o value "$ROOT_PARTITION")
+PARTITION_PARTUUID=$(blkid -s PARTUUID -o value "$ROOT_PARTITION")
 
 case "$BOOTLOADER" in
 "grub")
@@ -260,8 +263,8 @@ case "$LAYOUT" in
 esac
 
 if [[ "$FILE_SYSTEM" =~ "btrfs" ]]; then
-        echo "Btrfs module added"
-        sed -i "/^MODULES=/s/(/($MODULES/" /etc/mkinitcpio.conf
+    echo "Btrfs module added"
+    sed -i "/^MODULES=/s/(/($MODULES/" /etc/mkinitcpio.conf
 fi
 
 if [[ -f "/etc/mkinitcpio.conf" ]]; then
