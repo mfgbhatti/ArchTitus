@@ -12,10 +12,10 @@
 
 ---
 
-## Note
+### Note
 * You can first try it in a `VirtualMachine`
 
-## Prerequisites
+### Prerequisites
 
 - A working internet connection
 - Logged in as 'root'
@@ -24,29 +24,29 @@
 Download ArchISO from <https://archlinux.org/download/> and put on a USB drive with [Etcher](https://www.balena.io/etcher/), [Ventoy](https://www.ventoy.net/en/index.html), or [Rufus](https://rufus.ie/en/)
 
 ## Download ASAI
-You can clone ASAI
-
+You can clone
 ```
 git clone https://github.com/mfgbhatti/asai
+
+```
+then
+```
 cd asai
 ./asai
 ```
 ## Features
-ASAI offer in addition to the following:
-
-### Background functions
-1. Root check
-2. Arch System check
-3. Docker check
-4. Pacman db lock check
-5. Connection check
-
+ASAI offers the following:
 ### Partition Layouts
-1. LVM
-2. LVM + LUKS
-3. Use user already existed boot and root partitions
+1. btrfs
+2. LVM
+3. LVM + LUKS
+4. Use user already existed boot and root partitions
+
+#### Btrfs Subvolume
+ASAI allows users to customize subvolume names and numbers.
 
 ### Variety of Filesystems
+ASAI is offering these file systems
 1. Btrfs
 2. Ext2
 3. Ext3
@@ -57,9 +57,6 @@ ASAI offer in addition to the following:
 8. Ntfs
 9. Vfat
 10. Xfs
-
-### Btrfs Subvolume
-ASAI allows users to customize subvolume names and numbers.
 
 ### Desktop Env or Desktop Managers
 Asai offers these mainline DEs or DMs
@@ -76,15 +73,17 @@ Asai offers these mainline DEs or DMs
 11. Deepin
 12. Budgie
 
-### Bootloader
+### Bootloaders
 In addition to Grub, ASAI offers
 - Systemd boot
 - EFISTUB
 
-
-### Setting Keymap
-### SSD Drive Check
-
+### Kernel Selection
+You can select from 
+1. linux
+2. linux-lts
+3. linux-zen
+4. linux-hardened
 ---
 
 ## Troubleshooting
