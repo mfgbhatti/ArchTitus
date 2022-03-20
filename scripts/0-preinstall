@@ -76,43 +76,48 @@ do_format() {
 do_lvm() {
     i=0
     while [[ "$i" -lt "$LVM_PART_NUM" ]]; do
-
-        if [[ "$p" -eq "1" || "$LVM_PART_NUM" -eq "1" ]]; then
+        if [[ "$LVM_PART_NUM" -eq "1" || "$PART_NUM" -eq "1" ]]; then
+            echo -ne "Creating ${LVM_NAMES[$i]} with 100%FREE space\n"
             lvcreate --extents 100%FREE "$LVM_VG" --name "${LVM_NAMES[$i]}"
         else
+            echo -ne "Creating ${LVM_NAMES[$i]} with ${LVM_SIZES[$i]} space\n"
             lvcreate --size "${LVM_SIZES[$i]}" "$LVM_VG" --name "${LVM_NAMES[$i]}"
         fi
         i=$((i + 1))
-        p=$((LVM_PART_NUM - 1))
+        PART_NUM=$((LVM_PART_NUM - 1))
     done
 }
 
 mount_lvm() {
     vgchange -ay &>/dev/null
     i=0
-    while [[ "$i" -le "$LVM_PART_NUM" ]]; do
+    while [[ "$i" -lt "$LVM_PART_NUM" ]]; do
         lvchange -ay /dev/"$LVM_VG"/"${LVM_NAMES[$i]}" >/dev/null 2>&1
+        echo -ne "Formating /dev/$LVM_VG/${LVM_NAMES[$i]}\n"
         do_format /dev/"$LVM_VG"/"${LVM_NAMES[$i]}"
 
         i=$((i + 1))
     done
     mount -t "$FILE_SYSTEM" /dev/"$LVM_VG"/"${LVM_NAMES[0]}" "$MOUNTPOINT"
-    for x in "${LVM_NAMES[@]:1}"; do
-        mkdir "$MOUNTPOINT"/"$x"
-        mount -t "$FILE_SYSTEM" /dev/"$LVM_VG"/"$x" "$MOUNTPOINT"/"$x"
-    done
+    if [[ "$LVM_PART_NUM" != "1" ]]; then
+        for x in "${LVM_NAMES[@]:1}"; do
+            mkdir "$MOUNTPOINT"/"$x"
+            echo -ne "mounting /dev/$LVM_VG/$x on $MOUNTPOINT/$x with type $FILE_SYSTEM"
+            mount -t "$FILE_SYSTEM" /dev/"$LVM_VG"/"$x" "$MOUNTPOINT"/"$x"
+        done
+    fi
 }
 
 prep_disk() {
-    echo "Preparing disk"
-    wipefs -a -f "$DISK"
+    echo -ne "Preparing disk\n"
+    wipefs -a -f "$DISK" >/dev/null 2>&1
     sgdisk -Z "$DISK"
     sgdisk -a 2048 -o "$DISK"
 }
 
 do_partition() {
     prep_disk
-    echo "Partitioning disk"
+    echo -ne "Partitioning disk\n"
     if [[ "$UEFI" -eq "1" ]]; then
         sgdisk -n 1::+300M --typecode=1:ef00 --change-name=1:"$BOOT" "$DISK"
         sgdisk -n 2::-0 --typecode=2:8300 --change-name=2:"$ROOT" "$DISK"
