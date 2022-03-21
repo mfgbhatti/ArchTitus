@@ -16,12 +16,17 @@ do_btrfs() {
     done
 
     umount /mnt
-    mount -o "$MOUNTOPTION",subvol=@ "$2" "$MOUNTPOINT"
+    mount -o "$MOUNTOPTION",subvol=@ "$2" "$MOUNTPOINT" 
 
-    for z in "${BTRFS_SUBVOLUMES[@]:1}"; do
-        w="${z[*]//@/}"
-        mkdir /mnt/"${w}"
-        mount -o "$MOUNTOPTION",subvol="${z}" "$2" "$MOUNTPOINT"/"${w}"
+    if [[ $TOTALMEM -lt 8000000 ]]; then
+        echo -ne "Adding @swap to subvolumes\n"
+        BTRFS_SUBVOLUMES+=("@swap")
+    fi
+
+    for VOL in "${BTRFS_SUBVOLUMES[@]:1}"; do
+        DIR="${VOL//@/}"
+        mkdir /mnt/"$DIR"
+        mount -o "$MOUNTOPTION",subvol="$VOL" "$2" "$MOUNTPOINT"/"$DIR"
     done
 }
 
@@ -207,18 +212,21 @@ cp -R "$SCRIPT_DIR" "$MOUNTPOINT"/root/asai
 cp /etc/pacman.d/mirrorlist "$MOUNTPOINT"/etc/pacman.d/mirrorlist
 
 if [[ $TOTALMEM -lt 8000000 ]]; then
-    echo "Creating swap file "
-    mkdir -p "$MOUNTPOINT"/opt/swap
     if [[ "$LAYOUT" =~ "btrfs" ]]; then
+        SWAP_FILE_PATH="swap"
         echo "Setting COW"
-        chattr +C "$MOUNTPOINT"/opt/swap
+        chattr +C "$MOUNTPOINT"/"$SWAP_FILE_PATH"
+    else
+        SWAP_FILE_PATH="opt/swap"
+        mkdir -p "$MOUNTPOINT"/"$SWAP_FILE_PATH"
     fi
-    dd if=/dev/zero of="$MOUNTPOINT"/opt/swap/swapfile bs=1M count=2048 status=progress >/dev/null 2>&1
+    echo "Creating swap file "
+    dd if=/dev/zero of="$MOUNTPOINT"/"$SWAP_FILE_PATH"/swapfile bs=1M count=2048 status=progress >/dev/null 2>&1
     echo "Setting permissions"
-    chmod 600 "$MOUNTPOINT"/opt/swap/swapfile
-    chown root "$MOUNTPOINT"/opt/swap/swapfile
+    chmod 600 "$MOUNTPOINT"/"$SWAP_FILE_PATH"/swapfile
+    chown root "$MOUNTPOINT"/"$SWAP_FILE_PATH"/swapfile
     echo "Making swap on"
-    mkswap "$MOUNTPOINT"/opt/swap/swapfile >/dev/null 2>&1
-    swapon "$MOUNTPOINT"/opt/swap/swapfile >/dev/null 2>&1
-    echo -e "/opt/swap/swapfile\tnone     \tswap     \tsw\t0 0" >>"$MOUNTPOINT"/etc/fstab
+    mkswap "$MOUNTPOINT"/"$SWAP_FILE_PATH"/swapfile >/dev/null 2>&1
+    swapon "$MOUNTPOINT"/"$SWAP_FILE_PATH"/swapfile >/dev/null 2>&1
+    echo -e "/$SWAP_FILE_PATH/swapfile\tnone     \tswap     \tsw\t0 0" >>"$MOUNTPOINT"/etc/fstab
 fi
