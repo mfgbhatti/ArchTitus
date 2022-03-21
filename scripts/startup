@@ -7,6 +7,27 @@ set_filesystem() {
     PS3="$PROMPT"
     select OPT in "${FILESYS[@]}"; do
         if elements_present "$OPT" "${FILESYS[@]}"; then
+            case "$OPT" in
+            "xfs")
+                set_option "PACKAGES" "xfsprogs"
+                ;;
+            "btrfs")
+                set_option "PACKAGES" "btrfs-progs"
+                ;;
+            "f2fs")
+                set_option "PACKAGES" "f2fs-tools"
+                ;;
+            "jfs")
+                set_option "PACKAGES" "jfsutils"
+                ;;
+            "nilfs2")
+                set_option "PACKAGES" "nilfs-utils"
+                ;;
+            "ntfs")
+                set_option "PACKAGES" "ntfs-3g"
+                ;;
+            *) ;;
+            esac
             set_option "FILE_SYSTEM" "$OPT"
             break
         else
@@ -28,12 +49,14 @@ set_partion_layout() {
                 set_btrfs
                 set_option "LAYOUT" "btrfs"
                 set_option "FILE_SYSTEM" "btrfs"
+                set_option "PACKAGES" "btrfs-progs"
                 set_option "MODULES" "btrfs"
 
                 break
                 ;;
             2)
                 set_option "LAYOUT" "lvm"
+                set_option "PACKAGES" "lvm2"
                 set_option "HOOKS" "(lvm2 filesystems)"
                 set_filesystem
                 set_lvm
@@ -41,7 +64,6 @@ set_partion_layout() {
                 ;;
             3)
                 set_lvm
-                set_option "LAYOUT" "luks"
                 read -rp "Enter the LUKS path [like luks or crypt]: " LUKS_PATH
                 echo -ne "It will be /dev/mapper/luks or /dev/mapper/crypt\n"
                 if [[ -z "$LUKS_PATH" ]]; then
@@ -50,13 +72,15 @@ set_partion_layout() {
                     set_option "LUKS_PATH" "$LUKS_PATH"
                 fi
                 set_filesystem
+                set_option "LAYOUT" "luks"
                 set_password "LUKS_PASSWORD"
+                set_option "PACKAGES" "lvm2 cryptsetup"
                 set_option "HOOKS" "(base udev autodetect keyboard keymap consolefont modconf block lvm2 encrypt filesystems fsck)"
                 break
                 ;;
             4)
                 echo -ne "Maintaining current settings\n"
-                mapfile -t CHOICE <<< "$(lsblk | grep 'part' | awk '{print "/dev/" substr($1,3)}')"
+                mapfile -t CHOICE <<<"$(lsblk | grep 'part' | awk '{print "/dev/" substr($1,3)}')"
                 if [[ -d "/sys/firmware/efi/" ]]; then
                     echo -ne "Select your boot partition\n"
                     PS3="$PROMPT"
@@ -94,7 +118,7 @@ set_partion_layout() {
 # Added this from arch wiki https://wiki.archlinux.org/title/System_time
 set_timezone() {
     title "Setup Time Zone"
-    mapfile -t _ZONE <<< "$(timedatectl list-timezones | sed 's/\/.*$//' | uniq)"
+    mapfile -t _ZONE <<<"$(timedatectl list-timezones | sed 's/\/.*$//' | uniq)"
     echo -ne "System detected your timezone to be '$_TIMEZONE'"
     echo " "
     read -r -p "Is this correct? [like yes/no]: " ANSWER
@@ -108,7 +132,7 @@ set_timezone() {
         echo -ne "Please select your zone: \n"
         select ZONE in "${_ZONE[@]}"; do
             if elements_present "$ZONE" "${_ZONE[@]}"; then
-            mapfile -t _SUBZONE <<< "$(timedatectl list-timezones | grep "${ZONE}" | sed 's/^.*\///')"
+                mapfile -t _SUBZONE <<<"$(timedatectl list-timezones | grep "${ZONE}" | sed 's/^.*\///')"
                 PS3="$PROMPT"
                 echo -ne "Please select your subzone: \n"
                 select SUBZONE in "${_SUBZONE[@]}"; do
@@ -154,7 +178,7 @@ set_keymap() {
 
 disk_selection() {
     title "Disk Selection"
-    mapfile -t DISKLIST <<< "$(lsblk -n --output TYPE,KNAME,SIZE | awk '$1=="disk"{print "/dev/"$2" - "$3}')"
+    mapfile -t DISKLIST <<<"$(lsblk -n --output TYPE,KNAME,SIZE | awk '$1=="disk"{print "/dev/"$2" - "$3}')"
     PS3="$PROMPT"
     select _DISK in "${DISKLIST[@]}"; do
         if elements_present "$_DISK" "${DISKLIST[@]}"; then
@@ -233,7 +257,7 @@ set_locale() {
             fi
         done
     }
-    mapfile -t LOCALES <<< "$(grep UTF-8 /etc/locale.gen | sed 's/\..*$//' | sed '/@/d' | awk '{print $1}' | uniq | sed 's/#//g')"
+    mapfile -t LOCALES <<<"$(grep UTF-8 /etc/locale.gen | sed 's/\..*$//' | sed '/@/d' | awk '{print $1}' | uniq | sed 's/#//g')"
     GROUP=6
     SIZE=$((${#LOCALES[@]} / GROUP))
     LOCALES1=("Load 2 List" "${LOCALES[@]::$SIZE}") # SC2034
@@ -290,9 +314,9 @@ set_kernel() {
     select KERNEL in "${SELECTION[@]}"; do
         if elements_present "$KERNEL" "${SELECTION[@]}"; then
             if [[ "$KERNEL" != "linux" ]]; then
-            set_option "PACKAGES" "$KERNEL"
-            POSTFIX=$(echo "$KERNEL" | awk 'BEGIN { FS="-" }; {print "-"$2}')
-            set_option "KERNEL_POSTFIX" "$POSTFIX"
+                set_option "PACKAGES" "$KERNEL"
+                POSTFIX=$(echo "$KERNEL" | awk 'BEGIN { FS="-" }; {print "-"$2}')
+                set_option "KERNEL_POSTFIX" "$POSTFIX"
             else
                 set_option "PACKAGES" "linux"
             fi
