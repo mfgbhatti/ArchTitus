@@ -242,7 +242,8 @@ set_locale() {
             if elements_present "$LOCALE" "$@"; then
                 x=2
                 while [[ "$x" -le "$GROUP" ]]; do
-                    if [[ "$LOCALE" == "Load $x List" ]]; then
+                    REG="Load $x[a-z]* List"
+                    if [[ "$LOCALE" =~ $REG ]]; then
                         NAME="LOCALES$x[@]" # SC1087
                         select_locale "${!NAME}"
                     fi
@@ -259,12 +260,12 @@ set_locale() {
     }
     mapfile -t LOCALES <<<"$(grep UTF-8 /etc/locale.gen | sed 's/\..*$//' | sed '/@/d' | awk '{print $1}' | uniq | sed 's/#//g')"
     GROUP=6
-    SIZE=$((${#LOCALES[@]} / GROUP))
-    LOCALES1=("Load 2 List" "${LOCALES[@]::$SIZE}") # SC2034
-    LOCALES2=("Load 3 List" "${LOCALES[@]:50:$SIZE}")
-    LOCALES3=("Load 4 List" "${LOCALES[@]:100:$SIZE}")
-    LOCALES4=("Load 5 List" "${LOCALES[@]:150:$SIZE}")
-    LOCALES5=("Load 6 List" "${LOCALES[@]:200:$SIZE}")
+    SIZE=$((${#LOCALES[@]} / GROUP - 1))
+    LOCALES1=("Load 2nd List" "${LOCALES[@]:1:$SIZE}") # SC2034
+    LOCALES2=("Load 3rd List" "${LOCALES[@]:50:$SIZE}")
+    LOCALES3=("Load 4th List" "${LOCALES[@]:100:$SIZE}")
+    LOCALES4=("Load 5th List" "${LOCALES[@]:150:$SIZE}")
+    LOCALES5=("Load 6th List" "${LOCALES[@]:200:$SIZE}")
     LOCALES6=("${LOCALES[@]:250:((${#LOCALES[@]} - 1))}")
     PS3="$PROMPT"
     select_locale "${LOCALES1[@]}"
@@ -396,4 +397,4 @@ make_choice() {
 }
 
 make_choice
-# set_kernel
+# set_locale
