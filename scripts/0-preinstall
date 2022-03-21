@@ -124,14 +124,6 @@ do_partition() {
     else
         sgdisk -n 1::+1M --typecode=1:ef02 --change-name=1:"BIOSBOOT" "$DISK"
         sgdisk -n 2::-0 --typecode=2:8300 --change-name=2:"$ROOT" "$DISK"
-
-    fi
-    if [[ "$SDD" -eq "1" ]]; then
-        set_option "BOOT_PARTITION" "${DISK}p1"
-        set_option "ROOT_PARTITION" "${DISK}p2"
-    else
-        set_option "BOOT_PARTITION" "${DISK}1"
-        set_option "ROOT_PARTITION" "${DISK}2"
     fi
 }
 

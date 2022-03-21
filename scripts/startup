@@ -162,10 +162,14 @@ disk_selection() {
             set_option "DISK" "$DISK"
             if [[ "$(lsblk -n --output TYPE,ROTA | awk '$1=="disk"{print $2}')" -eq "0" ]]; then
                 set_option "SSD" 1
+                set_option "BOOT_PARTITION" "${DISK}p1"
+                set_option "ROOT_PARTITION" "${DISK}p2"
                 set_option "MOUNTOPTION" "noatime,compress=zstd,ssd,commit=120"
             else
                 set_option "SSD" 0
                 set_option "MOUNTOPTION" "noatime,compress=zstd,commit=120"
+                set_option "BOOT_PARTITION" "${DISK}1"
+                set_option "ROOT_PARTITION" "${DISK}2"
             fi
             break
         else
@@ -237,7 +241,7 @@ set_locale() {
     LOCALES3=("Load 4 List" "${LOCALES[@]:100:$SIZE}")
     LOCALES4=("Load 5 List" "${LOCALES[@]:150:$SIZE}")
     LOCALES5=("Load 6 List" "${LOCALES[@]:200:$SIZE}")
-    LOCALES6=("${LOCALES[@]:250:54}")
+    LOCALES6=("${LOCALES[@]:250:((${#LOCALES[@]} - 1))}")
     PS3="$PROMPT"
     select_locale "${LOCALES1[@]}"
 }
