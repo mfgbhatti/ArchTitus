@@ -162,7 +162,7 @@ set_timezone() {
 
 set_keymap() {
     title "Setup Keymap"
-    KEYMAPS=("by" "ca" "cf" "cz" "de" "dk" "es" "et" "fa" "fi" "fr" "gr" "hu" "il" "it" "lt" "lv" "mk" "nl" "no" "pl" "ro" "ru" "sg" "ua" "uk" "us")
+    mapfile -t KEYMAPS <<<"$(localectl list-keymaps | grep -E "^[a-z]{2}$")"
     PS3="$PROMPT"
     select MAP in "${KEYMAPS[@]}"; do
         if elements_present "$MAP" "${KEYMAPS[@]}"; then
@@ -397,4 +397,4 @@ make_choice() {
 }
 
 make_choice
-# set_locale
+# set_keymap
