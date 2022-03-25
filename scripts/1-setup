@@ -36,7 +36,7 @@ fi
 
 echo "Setup Language and set locale"
 hwclock --systohc
-sed -i '/'"${LOCALE}"'/s/^#//' /etc/locale.gen
+sed -i '/'"${LOCALE}"'.UTF-8/s/^#//' /etc/locale.gen
 locale-gen
 timedatectl --no-ask-password set-timezone "$TIMEZONE"
 timedatectl --no-ask-password set-ntp 1
@@ -270,7 +270,7 @@ fi
 if [[ -f "/etc/mkinitcpio.conf" ]]; then
     # making mkinitcpio with linux kernel
     echo "Building initramfs"
-    mkinitcpio -p linux
+    mkinitcpio -p linux"$KERNEL_POSTFIX" 
 fi
 
 title "System ready for 2-user.sh"
