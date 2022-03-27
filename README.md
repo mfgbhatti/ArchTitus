@@ -29,6 +29,10 @@ You can clone
 git clone https://github.com/mfgbhatti/asai
 
 ```
+then you have two options
+1. either to use interactive wizard and 
+2. or to use config file `setup.conf` and edit all variables present in `setup.conf`
+But keep in mind to change AUTO="1" by default it is 0 and this direct you to interactive wizard.
 then
 ```
 cd asai
