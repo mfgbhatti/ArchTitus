@@ -166,6 +166,7 @@ set_keymap() {
     PS3="$PROMPT"
     select MAP in "${KEYMAPS[@]}"; do
         if elements_present "$MAP" "${KEYMAPS[@]}"; then
+            localectl --no-ask-password set-keymap --no-convert "$MAP"
             set_option "KEYMAP" "$MAP"
             break
         else
@@ -380,9 +381,9 @@ run_tasks() {
 make_choice() {
     run_tasks
     logo
-    user_info
-    set_timezone
     set_keymap
+    set_timezone
+    user_info
     logo
     set_locale
     disk_selection
