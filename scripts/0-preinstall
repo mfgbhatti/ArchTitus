@@ -6,29 +6,6 @@ make_boot() {
     fi
 }
 
-do_btrfs() {
-    mkfs.btrfs -L "$1" "$2" -f
-    mount -t btrfs "$2" "$MOUNTPOINT"
-
-    echo "Creating subvolumes and directories"
-    for x in "${BTRFS_SUBVOLUMES[@]}"; do
-        btrfs subvolume create "$MOUNTPOINT"/"${x}" >/dev/null 2>&1
-    done
-
-    umount /mnt
-    mount -o "$MOUNTOPTION",subvol=@ "$2" "$MOUNTPOINT" 
-
-    if [[ $TOTALMEM -lt 8000000 ]]; then
-        echo -ne "Adding @swap to subvolumes\n"
-        BTRFS_SUBVOLUMES+=("@swap")
-    fi
-
-    for VOL in "${BTRFS_SUBVOLUMES[@]:1}"; do
-        DIR="${VOL//@/}"
-        mkdir /mnt/"$DIR"
-        mount -o "$MOUNTOPTION",subvol="$VOL" "$2" "$MOUNTPOINT"/"$DIR"
-    done
-}
 
 do_format() {
     echo -ne "Formating with $FILE_SYSTEM"
@@ -69,6 +46,30 @@ do_format() {
         ;;
     esac
 
+}
+
+do_btrfs() {
+    do_formatc "$ROOT_PARTITION"
+    mount -t btrfs "$ROOT_PARTITION" "$MOUNTPOINT"
+
+    echo "Creating subvolumes and directories"
+    for x in "${BTRFS_SUBVOLUMES[@]}"; do
+        btrfs subvolume create "$MOUNTPOINT"/"${x}" >/dev/null 2>&1
+    done
+
+    umount /mnt
+    mount -o "$MOUNTOPTION",subvol=@ "$ROOT_PARTITION" "$MOUNTPOINT" 
+
+    if [[ $TOTALMEM -lt 8000000 ]]; then
+        echo -ne "Adding @swap to subvolumes\n"
+        BTRFS_SUBVOLUMES+=("@swap")
+    fi
+
+    for VOL in "${BTRFS_SUBVOLUMES[@]:1}"; do
+        DIR="${VOL//@/}"
+        mkdir /mnt/"$DIR"
+        mount -o "$MOUNTOPTION",subvol="$VOL" "$ROOT_PARTITION" "$MOUNTPOINT"/"$DIR"
+    done
 }
 
 do_lvm() {
@@ -149,7 +150,7 @@ case "$LAYOUT" in
 "btrfs")
     do_partition
     make_boot
-    do_btrfs "$ROOT" "$ROOT_PARTITION"
+    do_btrfs
     mount_boot
     ;;
 
@@ -181,10 +182,13 @@ case "$LAYOUT" in
     modprobe dm-mod
     vgscan &>/dev/null
     vgchange -ay &>/dev/null
-    mount "$ROOT_PARTITION" "$MOUNTPOINT"
-    if [[ "$UEFI" -eq 1 ]]; then
-        mount_boot
+    if [[ "$MANUAL_PART" -eq "1" ]]; then
+        do_partition
+        make_boot
+        do_format "$ROOT_PARTITION"
     fi
+    mount -t "$FILE_SYSTEM" "$ROOT_PARTITION" "$MOUNTPOINT"
+    mount_boot
     ;;
 
 *)
