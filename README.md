@@ -44,7 +44,7 @@ ASAI offers the following:
 1. btrfs
 2. LVM
 3. LVM + LUKS
-4. Use user already existed boot and root partitions
+4. Use user already existed boot and root partitions or user can give sizes for boot and root partition
 
 #### Btrfs Subvolume
 ASAI allows users to customize subvolume names and numbers.
