@@ -5,16 +5,12 @@ SCRIPT_DIR="$HOME/asai"
 
 CONFIG_FILE="$SCRIPT_DIR"/configs/setup.conf
 
-source_setup() {
-    if [[ -f "$CONFIG_FILE" ]]; then
-        source "$CONFIG_FILE"
-    else
-        echo "ERROR! Missing file: $CONFIG_FILE"
-        exit 0
-    fi
-}
-
-source_setup
+if [[ -f "$CONFIG_FILE" ]]; then
+    source "$CONFIG_FILE"
+else
+    echo "ERROR! Missing file: $CONFIG_FILE"
+    exit 0
+fi
 
 install_grub_theme() {
     if [[ "$GRUBTHEME" != "None" ]]; then
