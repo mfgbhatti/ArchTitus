@@ -60,7 +60,7 @@ do_btrfs() {
     umount /mnt
     mount -o "$MOUNTOPTION",subvol=@ "$ROOT_PARTITION" "$MOUNTPOINT" 
 
-    if [[ $TOTALMEM -lt 8000000 ]]; then
+    if [[ "$SWAP" -eq "1" ]]; then
         echo -ne "Adding @swap to subvolumes\n"
         BTRFS_SUBVOLUMES+=("@swap")
     fi
@@ -215,7 +215,7 @@ genfstab -U "$MOUNTPOINT" >>"$MOUNTPOINT"/etc/fstab
 cp -R "$SCRIPT_DIR" "$MOUNTPOINT"/root/asai
 cp /etc/pacman.d/mirrorlist "$MOUNTPOINT"/etc/pacman.d/mirrorlist
 
-if [[ $TOTALMEM -lt 8000000 ]]; then
+if [[ "$SWAP" -eq "1" ]]; then
     if [[ "$LAYOUT" =~ "btrfs" ]]; then
         SWAP_FILE_PATH="swap"
         echo "Setting COW"

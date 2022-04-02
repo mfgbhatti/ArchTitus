@@ -24,7 +24,7 @@ install_services() {
     install_pkg cups bluez bluez-utils networkmanager cronie ntp dhcpcd
 }
 
-if [[ $TOTALMEM -gt 8000000 ]]; then
+if [[ "$SWAP" -eq "1" ]]; then
     echo "Changing makepkg.conf for $CPU_CORES cores"
     sed -i "s/#MAKEFLAGS=\"-j2\"/MAKEFLAGS=\"-j$CPU_CORES\"/g" /etc/makepkg.conf
     sed -i "s/COMPRESSXZ=(xz -c -z -)/COMPRESSXZ=(xz -c -T $CPU_CORES -z -)/g" /etc/makepkg.conf
