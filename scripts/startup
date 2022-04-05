@@ -21,10 +21,15 @@ set_keymap() {
 # Added this from arch wiki https://wiki.archlinux.org/title/System_time
 set_timezone() {
     title "Setup Time Zone"
+    _TIMEZONE="$(curl --silent --fail https://ipapi.co/timezone)"
     mapfile -t _ZONE <<<"$(timedatectl list-timezones | sed 's/\/.*$//' | uniq)"
-    echo -ne "System detected your timezone to be '$_TIMEZONE'"
-    echo " "
-    read -r -p "Is this correct? [like yes/no]: " ANSWER
+    if [[ -z "$_TIMEZONE" ]]; then
+        echo -ne "ERROR! There is a problem with your internet connection.\n"
+        ANSWER="YES"
+    else
+        echo -ne "System detected your timezone to be \"$_TIMEZONE\"\n"
+        read -r -p "Is this correct? [like yes/no]: " ANSWER
+    fi
     case "$ANSWER" in
     y | Y | yes | Yes | YES)
         set_option "TIMEZONE" "$_TIMEZONE"
