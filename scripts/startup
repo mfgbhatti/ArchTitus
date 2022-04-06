@@ -165,28 +165,34 @@ disk_selection() {
 
 set_filesystem() {
     title "Setup File System"
-    echo -ne "WARNING: THIS MAY FORMAT AND DELETE ALL DATA ON THE DISK"
+    echo -ne "WARNING: THIS MAY FORMAT AND DELETE ALL DATA ON THE DISK\n"
     FILESYS=("btrfs" "ext2" "ext3" "ext4" "f2fs" "jfs" "nilfs2" "ntfs" "vfat" "xfs")
     PS3="$PROMPT"
     select OPT in "${FILESYS[@]}"; do
         if elements_present "$OPT" "${FILESYS[@]}"; then
             case "$OPT" in
             "xfs")
+                set_option "FILESYSTEM" "xfs"
                 set_option "PACKAGES" "xfsprogs"
                 ;;
             "btrfs")
+                set_option "FILESYSTEM" "btrfs"
                 set_option "PACKAGES" "btrfs-progs"
                 ;;
             "f2fs")
+                set_option "FILESYSTEM" "f2fs"
                 set_option "PACKAGES" "f2fs-tools"
                 ;;
             "jfs")
+                set_option "FILESYSTEM" "jfs"
                 set_option "PACKAGES" "jfsutils"
                 ;;
             "nilfs2")
+                set_option "FILESYSTEM" "nilfs2"
                 set_option "PACKAGES" "nilfs-utils"
                 ;;
             "ntfs")
+                set_option "FILESYSTEM" "ntfs"
                 set_option "PACKAGES" "ntfs-3g"
                 ;;
             *) ;;
