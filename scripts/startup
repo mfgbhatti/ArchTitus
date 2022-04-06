@@ -171,14 +171,13 @@ set_filesystem() {
     select OPT in "${FILESYS[@]}"; do
         if elements_present "$OPT" "${FILESYS[@]}"; then
             case "$OPT" in
-            "xfs")
-                set_option "FILESYSTEM" "xfs"
-                set_option "PACKAGES" "xfsprogs"
-                ;;
             "btrfs")
                 set_option "FILESYSTEM" "btrfs"
                 set_option "PACKAGES" "btrfs-progs"
                 ;;
+            "ext2") ;;
+            "ext3") ;;
+            "ext4") ;;
             "f2fs")
                 set_option "FILESYSTEM" "f2fs"
                 set_option "PACKAGES" "f2fs-tools"
@@ -195,9 +194,16 @@ set_filesystem() {
                 set_option "FILESYSTEM" "ntfs"
                 set_option "PACKAGES" "ntfs-3g"
                 ;;
-            *) ;;
+            "vfat") ;;
+
+            "xfs")
+                set_option "FILESYSTEM" "xfs"
+                set_option "PACKAGES" "xfsprogs"
+                ;;
+            *)
+                invalid_option
+                ;;
             esac
-            set_option "FILE_SYSTEM" "$OPT"
             break
         else
             invalid_option
