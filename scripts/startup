@@ -165,13 +165,14 @@ disk_selection() {
 
 set_filesystem() {
     title "Setup File System"
-    echo -ne "WARNING: THIS MAY FORMAT AND DELETE ALL DATA ON THE DISK\n"
+    echo -ne "WARNING: THIS MAY FORMAT AND DELETE ALL DATA ON THE DISK\n\n"
     FILESYS=("vfat" "ext2" "ext3" "ext4" "btrfs" "f2fs" "jfs" "nilfs2" "ntfs" "xfs")
     PS3="$PROMPT"
     select OPT in "${FILESYS[@]}"; do
         if elements_present "$OPT" "${FILESYS[@]}"; then
             if [[ "${FILESYS[*]::4}" =~ $OPT ]]; then
                 set_option "FILE_SYSTEM" "$OPT"
+                break
             else
                 case "$OPT" in
                 "btrfs")
@@ -282,6 +283,7 @@ set_partion_layout() {
                             set_option "MANUAL_PART" "1"
                             set_part
                             set_filesystem
+                            break
                             ;;
                         3)
                             exit 0
