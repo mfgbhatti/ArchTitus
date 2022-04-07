@@ -49,7 +49,7 @@ do_format() {
 }
 
 do_btrfs() {
-    do_formatc "$ROOT_PARTITION"
+    do_format "$ROOT_PARTITION"
     mount -t btrfs "$ROOT_PARTITION" "$MOUNTPOINT"
 
     echo "Creating subvolumes and directories"
