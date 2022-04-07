@@ -255,6 +255,7 @@ set_partion_layout() {
                 PS3="$PROMPT"
                 select CHC in "${CHOICES[@]}"; do
                     if elements_present "$CHC" "${CHOICES[@]}"; then
+                        set_option "LAYOUT" "none"
                         case "$REPLY" in # issue #8
                         1)
                             echo "Using user's partitions"
@@ -264,7 +265,6 @@ set_partion_layout() {
                                 PS3="$PROMPT"
                                 select BTP in "${CHOICE[@]}"; do
                                     if elements_present "$BTP" "${CHOICE[@]}"; then
-                                        set_option "LAYOUT" "none"
                                         set_option "BOOT_PARTITION" "$BTP"
                                     fi
                                     break
@@ -286,6 +286,7 @@ set_partion_layout() {
                             break
                             ;;
                         3)
+                            echo -ne "Exiting...\n"
                             exit 0
                             ;;
                         *)
