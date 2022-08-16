@@ -28,7 +28,7 @@ sequence() {
     else
         sudo_password "$MOUNTPOINT/etc/sudoers"
     fi
-    end
+    end_jobs
     logo
     title "Done - Please Eject Install Media and Reboot"
 
