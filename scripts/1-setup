@@ -243,7 +243,8 @@ fi
 case "$LAYOUT" in
 "lvm")
     echo "LVM hooks added"
-    sed -i "/^HOOK/s/filesystems/${HOOKS[*]}/" /etc/mkinitcpio.conf
+    # sed -i "/^HOOK/s/filesystems/${HOOKS[*]}/" /etc/mkinitcpio.conf
+    sed -i "s/^HOOK.*/HOOKS=(${HOOKS[*]})/" /etc/mkinitcpio.conf
     ;;
 "luks")
     echo "LUKS hooks added"

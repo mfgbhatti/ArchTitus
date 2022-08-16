@@ -230,7 +230,7 @@ set_partion_layout() {
             2)
                 set_option "LAYOUT" "lvm"
                 set_option "PACKAGES" "lvm2"
-                set_option "HOOKS" "(lvm2 filesystems)"
+                set_option "HOOKS" "base udev autodetect keyboard block lvm2 fsck filesystems"
                 set_filesystem
                 set_lvm
                 ;;
@@ -247,7 +247,7 @@ set_partion_layout() {
                 set_option "LAYOUT" "luks"
                 set_password "LUKS_PASSWORD"
                 set_option "PACKAGES" "lvm2 cryptsetup"
-                set_option "HOOKS" "(base udev autodetect keyboard keymap consolefont modconf block lvm2 encrypt filesystems fsck)"
+                set_option "HOOKS" "base udev autodetect keyboard keymap consolefont modconf block lvm2 encrypt filesystems fsck"
                 ;;
             4)
                 echo -ne "Maintaining current settings\n"
