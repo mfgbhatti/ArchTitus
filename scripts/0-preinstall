@@ -142,7 +142,7 @@ sed -i '/ParallelDownloads/s/^#//;/Color/s/^#//' /etc/pacman.conf
 if [[ ! -f /etc/pacman.d/mirrorlist.backup ]]; then
     cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.backup
 fi
-echo "Generating new mirrorlist"
+echo "Generating new mirrorlist for $ISO"
 reflector --age 48 --country "$ISO" -f 5 --latest 20 --protocol https --sort rate --save /etc/pacman.d/mirrorlist
 mkdir "$MOUNTPOINT" &>/dev/null
 
