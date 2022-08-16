@@ -230,7 +230,7 @@ set_partion_layout() {
             2)
                 set_option "LAYOUT" "lvm"
                 set_option "PACKAGES" "lvm2"
-                set_option "HOOKS" "base udev autodetect keyboard block lvm2 fsck filesystems"
+                set_option "HOOKS" "base udev autodetect keyboard keymap block lvm2 fsck filesystems"
                 set_filesystem
                 set_lvm
                 ;;

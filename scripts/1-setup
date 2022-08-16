@@ -34,10 +34,17 @@ echo "Setup Language and set locale"
 hwclock --systohc
 sed -i '/'"${LOCALE}"'.UTF-8/s/^#//' /etc/locale.gen
 locale-gen
-timedatectl --no-ask-password set-timezone "$TIMEZONE"
-timedatectl --no-ask-password set-ntp 1
-localectl --no-ask-password set-locale LANG="${LOCALE}.UTF-8" LC_TIME="${LOCALE}.UTF-8"
-localectl --no-ask-password set-keymap --no-convert "$KEYMAP"
+
+ln -sf /usr/share/zoneinfo/"$TIMEZONE" /etc/localtime
+echo "KEYMAP=$KEYMAP" > /etc/vconsole.conf
+echo "LANG=${LOCALE}.UTF-8" > /etc/locale.conf
+# these are not working in chroot
+{
+    timedatectl --no-ask-password set-timezone "$TIMEZONE"
+    timedatectl --no-ask-password set-ntp 1
+    localectl --no-ask-password set-locale LANG="${LOCALE}.UTF-8" LC_TIME="${LOCALE}.UTF-8"
+    localectl --no-ask-password set-keymap --no-convert "$KEYMAP"
+} >/dev/null 2>&1
 
 sudo_no_password "/etc/sudoers"
 
